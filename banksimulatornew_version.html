@@ -1,0 +1,2752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Bank Simulator</title>
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial,sans-serif;background:#070812;color:#fff}
+body{overflow-x:hidden}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0}
+.hidden{display:none!important}
+
+/* PREMIUM INTRO — intentionally scoped to the opening splash only */
+#splash{
+ position:fixed;inset:0;z-index:99999;overflow:hidden;
+ display:flex;align-items:center;justify-content:center;
+ background:radial-gradient(ellipse at 50% 42%,#211b3d 0%,#0c0d1b 43%,#05060d 100%);
+ opacity:1;visibility:visible;
+}
+#splash:before,#splash:after{
+ content:"";position:absolute;left:50%;top:50%;border-radius:50%;pointer-events:none;
+ transform:translate(-50%,-50%);
+}
+#splash:before{
+ width:min(78vw,430px);aspect-ratio:1;
+ border:1px solid #d7b45b35;
+ box-shadow:0 0 55px #9b75ff18,inset 0 0 55px #9b75ff0d;
+ animation:splashHalo 3.8s ease-out both;
+}
+#splash:after{
+ width:min(92vw,520px);aspect-ratio:1;
+ border:1px dashed #b9933545;
+ animation:splashOrbit 18s linear infinite;
+}
+.splashBox{position:relative;z-index:1;text-align:center;padding:24px}
+#splash .logo{
+ position:relative;width:118px;height:118px;border-radius:50%;
+ margin:auto;display:flex;align-items:center;justify-content:center;
+ font-size:30px;font-weight:900;letter-spacing:2px;color:#fff4d0;
+ background:radial-gradient(circle at 32% 25%,#383052 0%,#171427 48%,#090a14 100%);
+ border:1px solid #f2d78b;
+ box-shadow:0 0 0 5px #b9933524,0 0 0 9px #8064c51c,0 0 38px #b9933570,0 0 95px #7654d85c;
+ animation:premiumLogoReveal 1.25s cubic-bezier(.18,.82,.22,1) both, premiumLogoFloat 3.2s 1.25s ease-in-out infinite;
+}
+#splash .logo:before{
+ content:"";position:absolute;inset:-13px;border-radius:50%;
+ border:2px solid transparent;border-top-color:#f3d98d;border-right-color:#8c70d7;
+ filter:drop-shadow(0 0 7px #d9b75b);
+ animation:logoRing 2.8s 0.35s cubic-bezier(.4,0,.2,1) both;
+}
+#splash .logo:after{
+ content:"";position:absolute;inset:-23px;border-radius:50%;
+ border:1px solid #d5b66a55;transform:scale(.72);opacity:0;
+ animation:logoRipple 1.5s .65s ease-out both;
+}
+#splash .logo span{animation:premiumLetters 1.1s .35s cubic-bezier(.2,.8,.2,1) both}
+.splashBox h1{
+ margin:27px 0 7px;font-size:29px;letter-spacing:4px;font-weight:700;
+ color:#f5e8c4;text-shadow:0 0 22px #c8a65b55;
+ opacity:0;animation:splashTextIn .8s 1.05s ease-out forwards;
+}
+.splashBox p{
+ margin:0;color:#aaa8bb;font-size:11px;letter-spacing:3px;text-transform:uppercase;
+ opacity:0;animation:splashTextIn .8s 1.35s ease-out forwards;
+}
+#splash.splash-exit{opacity:0;visibility:hidden;transition:opacity .65s ease,visibility .65s ease}
+@keyframes premiumLogoReveal{
+ 0%{opacity:0;transform:scale(.35) rotate(-35deg);filter:blur(12px)}
+ 65%{opacity:1;transform:scale(1.09) rotate(5deg);filter:blur(0)}
+ 100%{opacity:1;transform:scale(1) rotate(0)}
+}
+@keyframes premiumLogoFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
+@keyframes premiumLetters{0%{opacity:0;transform:scale(.5);letter-spacing:10px;filter:blur(7px)}100%{opacity:1;transform:scale(1);letter-spacing:2px;filter:blur(0)}}
+@keyframes logoRing{0%{transform:rotate(-120deg) scale(.65);opacity:0}35%{opacity:1}100%{transform:rotate(360deg) scale(1);opacity:1}}
+@keyframes logoRipple{0%{transform:scale(.72);opacity:.8}100%{transform:scale(1.35);opacity:0}}
+@keyframes splashHalo{0%{transform:translate(-50%,-50%) scale(.55);opacity:0}35%{opacity:1}100%{transform:translate(-50%,-50%) scale(1.08);opacity:.6}}
+@keyframes splashOrbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes splashTextIn{from{opacity:0;transform:translateY(13px);filter:blur(5px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){#splash * ,#splash:before,#splash:after{animation:none!important}#splash .splashBox h1,#splash .splashBox p{opacity:1}}
+
+/* PREMIUM LOGIN AND REGISTRATION */
+#auth{
+ min-height:100vh;display:flex;align-items:center;justify-content:center;
+ padding:28px 18px;position:relative;isolation:isolate;overflow-x:hidden;overflow-y:auto;
+ background:radial-gradient(ellipse at 50% 0%,#263b53 0%,#101b2b 42%,#070c15 100%);
+}
+#auth:before,#auth:after{
+ content:"";position:absolute;border-radius:50%;pointer-events:none;z-index:-1;
+}
+#auth:before{
+ width:440px;height:440px;top:-245px;left:calc(50% - 220px);
+ border:1px solid #d9b66a2b;box-shadow:0 0 90px #d0a65318,inset 0 0 70px #d0a6530c;
+}
+#auth:after{
+ width:300px;height:300px;bottom:-210px;right:-105px;
+ border:1px solid #d9b66a20;box-shadow:0 0 65px #d0a65312;
+}
+.authCard{
+ width:100%;max-width:440px;position:relative;overflow:visible;
+ background:linear-gradient(155deg,#18283b 0%,#101b2b 58%,#0d1725 100%);
+ border:1px solid #c6a15a55;border-radius:26px;padding:clamp(25px,6vw,38px);
+ box-shadow:0 28px 85px #0009,0 0 0 5px #d0a6530b,inset 0 1px 0 #ffffff12;
+}
+.authCard:before{
+ content:"";position:absolute;left:12%;right:12%;top:0;height:1px;
+ background:linear-gradient(90deg,transparent,#e8cc8b,transparent);
+}
+.authCard > *{position:relative;z-index:1}
+.authLogo{
+ margin:0 auto 20px;width:78px;height:78px;font-size:20px;
+ border:1px solid #e5c77e;box-shadow:0 0 0 5px #c49a4a18,0 0 32px #c49a4a35;
+}
+.authCard h2{
+ text-align:center;margin:5px 0 7px;color:#fff5df;
+ font-size:27px;letter-spacing:.3px;font-weight:750;
+}
+.authCard .sub{
+ text-align:center;color:#b8c2ce;font-size:12px;letter-spacing:.45px;
+ margin-bottom:27px;
+}
+.tabs{
+ display:flex;background:#091321;border:1px solid #ffffff12;border-radius:13px;
+ padding:5px;margin-bottom:23px;gap:5px;
+}
+.tabs button{
+ width:50%;padding:12px 10px;border-radius:9px;background:transparent;
+ color:#aeb9c6;font-size:13px;font-weight:700;transition:.22s ease;
+}
+.tabs button.active{
+ color:#182638;background:linear-gradient(135deg,#f0d99e,#bd9651);
+ box-shadow:0 5px 16px #0004,inset 0 1px 0 #fff8;
+}
+.field{margin:15px 0}
+.field label{
+ display:block;color:#d6dce3;font-size:11px;font-weight:700;
+ letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;
+}
+.field input,.field select{
+ width:100%;padding:15px 16px;border-radius:11px;
+ border:1px solid #34465a;background:#0a1422;color:#fff;
+ outline:none;font-size:13px;transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.field input::placeholder{color:#788696}
+.field input:focus,.field select:focus{
+ border-color:#d2ad67;background:#0d1a2a;
+ box-shadow:0 0 0 3px #d2ad671c,0 7px 20px #0002;
+}
+.primary{
+ width:100%;padding:15px;border-radius:11px;
+ background:linear-gradient(110deg,#e6cc8e 0%,#c29a56 48%,#a77c3e 100%);
+ color:#142235;font-weight:800;font-size:13px;letter-spacing:.7px;
+ margin-top:13px;box-shadow:0 9px 22px #b48a4430,inset 0 1px 0 #fff9;
+ transition:transform .2s,filter .2s,box-shadow .2s;
+}
+.primary:hover{filter:brightness(1.08);box-shadow:0 12px 27px #b48a4445;transform:translateY(-1px)}
+.primary:active{transform:translateY(0) scale(.99)}
+.secondary{
+ width:100%;padding:13px;border-radius:11px;
+ background:#223348;border:1px solid #ffffff18;color:#e1e7ed;
+ margin-top:10px;font-weight:650;
+}
+.note{
+ font-size:11px;color:#9eacba;text-align:center;margin-top:20px;
+ line-height:1.65;border-top:1px solid #ffffff12;padding-top:15px;
+}
+.light #auth{background:radial-gradient(ellipse at 50% 0%,#f4ead4 0%,#e9edf2 48%,#dce4ec 100%)}
+.light .authCard{background:linear-gradient(155deg,#fffefa,#f3f5f7);border-color:#c7a15c88;box-shadow:0 25px 65px #29394a20}
+.light .authCard h2{color:#182b40}
+.light .authCard .sub{color:#6d7782}
+.light .tabs{background:#e8edf2;border-color:#d8dee5}
+.light .tabs button{color:#596879}
+.light .tabs button.active{color:#182638}
+.light .field label{color:#435366}
+.light .field input,.light .field select{background:#fff;color:#182b40;border-color:#d3dbe3}
+.light .field input::placeholder{color:#8994a0}
+.light .note{color:#778391;border-color:#dce2e8}
+
+/* APP */
+#app{display:none;min-height:100vh;background:#070812}
+#app.ready{display:block}
+.topbar{
+ position:sticky;top:0;z-index:100;height:66px;
+ display:flex;align-items:center;justify-content:space-between;
+ padding:0 15px;background:#0c0e1bdf;backdrop-filter:blur(15px);
+ border-bottom:1px solid #22253b;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:bold}
+.miniLogo{
+ width:40px;height:40px;border-radius:50%;display:flex;
+ align-items:center;justify-content:center;font-size:12px;font-weight:bold;
+ border:2px solid #c6a03c;background:#19122d;box-shadow:0 0 15px #6745bd;
+}
+.topActions{display:flex;gap:7px}
+.iconBtn{
+ width:42px;height:42px;border-radius:12px;background:#191b2b;color:#fff;
+ font-size:19px;
+}
+.dailyTopNotice{position:fixed;top:76px;left:50%;transform:translate(-50%,-18px);width:min(620px,calc(100% - 24px));z-index:9998;background:linear-gradient(120deg,#17263b,#101827);border:1px solid #d8b45e;border-radius:15px;padding:13px 15px;box-shadow:0 14px 38px #0009;color:#fff;display:none;opacity:0;transition:opacity .25s,transform .25s}.dailyTopNotice.show{display:block;opacity:1;transform:translate(-50%,0)}.dailyTopNotice .noticeHead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;color:#f1d58e}.dailyTopNotice .noticeBody{font-size:13px;line-height:1.45;color:#e6eaf0;margin-top:5px}.dailyTopNotice .noticeActions{display:flex;justify-content:flex-end;gap:8px;margin-top:9px}.dailyTopNotice button{padding:7px 12px;border-radius:9px;background:#d8b45e;color:#172338;font-weight:800}
+.notificationBell{position:relative}.notificationDot{display:none;position:absolute;right:6px;top:5px;width:9px;height:9px;border-radius:50%;background:#ff3434;border:1.5px solid #fff;box-shadow:0 0 0 2px #ff343455}.notificationDot.show{display:block}
+.content{max-width:1050px;margin:auto;padding:18px 15px 95px}
+.page{display:none}
+.page.active{display:block}
+h2{margin:4px 0 5px;font-size:25px}
+.subtitle{color:#999;font-size:13px;margin-bottom:17px}
+
+/* CARDS */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{
+ background:linear-gradient(145deg,#141629,#0e101e);
+ border:1px solid #292c45;border-radius:18px;padding:16px;
+ margin-bottom:13px;
+}
+.balanceCard{
+ background:linear-gradient(135deg,#21134b,#111426);
+ border:1px solid #543c8f;
+}
+.small{font-size:12px;color:#999}
+.amount{font-size:27px;font-weight:bold;margin-top:5px}
+.gold{color:#e1bd55}
+.green{color:#65df9c}
+.red{color:#ff7272}
+.quickGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.quick{
+ background:#141628;border:1px solid #292c43;color:white;
+ border-radius:15px;min-height:80px;padding:9px 4px;font-size:12px;
+}
+.quick b{display:block;font-size:22px;margin-bottom:7px}
+
+/* FORMS */
+.formCard{max-width:650px}
+.row{display:flex;gap:9px}
+.row>*{flex:1}
+.actionRow{display:flex;gap:8px;flex-wrap:wrap}
+.actionRow button{flex:1;min-width:120px}
+.listItem{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:10px;padding:13px 0;border-bottom:1px solid #25283b;
+}
+.listItem:last-child{border-bottom:0}
+.avatar{
+ width:42px;height:42px;border-radius:50%;background:#32245e;
+ display:flex;align-items:center;justify-content:center;font-weight:bold;
+ flex-shrink:0;
+}
+.itemMain{display:flex;align-items:center;gap:10px;min-width:0}
+.itemText{min-width:0}
+.itemText strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.itemText span{font-size:11px;color:#888}
+.badge{padding:5px 8px;border-radius:8px;font-size:10px;background:#24263a}
+.search{margin-bottom:12px}
+
+/* BOTTOM */
+.bottom{
+ position:fixed;bottom:0;left:0;right:0;height:72px;z-index:200;
+ background:#0d0f1ceF;border-top:1px solid #292b40;
+ display:flex;justify-content:space-around;
+ backdrop-filter:blur(15px);
+}
+.navBtn{
+ flex:1;background:none;color:#777;font-size:11px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+}
+.navBtn b{font-size:23px}
+.navBtn.active{color:#a578ff}
+
+/* MODAL */
+.modal{
+ position:fixed;inset:0;z-index:500;background:#0009;
+ display:none;align-items:flex-end;justify-content:center;padding:10px;
+}
+.modal.show{display:flex}
+.modalBox{
+ width:100%;max-width:600px;max-height:90vh;overflow:auto;
+ background:#111323;border:1px solid #333650;border-radius:22px;
+ padding:20px;box-shadow:0 -10px 50px #000;
+}
+.modalHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.close{background:#24263a;color:#fff;width:38px;height:38px;border-radius:10px}
+.toast{
+ position:fixed;left:50%;bottom:88px;transform:translateX(-50%);
+ background:#202337;color:#fff;padding:12px 17px;border-radius:12px;
+ z-index:1000;display:none;max-width:90%;text-align:center;
+}
+.toast.show{display:block}
+
+/* PAYMENT RESULT */
+.resultIcon{
+ width:100px;height:100px;border-radius:50%;margin:15px auto;
+ display:flex;align-items:center;justify-content:center;
+ font-size:58px;font-weight:bold;
+}
+.successIcon{background:#123d2b;border:3px solid #49d68d;color:#55e49b;animation:pop .5s}
+.failIcon{background:#431c25;border:3px solid #ff6464;color:#ff7070;animation:shake .45s}
+@keyframes pop{0%{transform:scale(.2)}80%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.center{text-align:center}
+
+/* INVESTMENTS */
+.asset{
+ border:1px solid #292c44;background:#111323;border-radius:17px;
+ padding:15px;margin-bottom:10px;
+}
+.assetTop{display:flex;justify-content:space-between;gap:10px}
+.assetPrice{font-size:20px;font-weight:bold;margin-top:5px}
+.assetButtons{display:flex;gap:7px;margin-top:12px}
+.assetButtons button{flex:1;padding:10px;border-radius:9px;background:#25273a;color:#fff}
+.statGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.stat{background:#151728;border-radius:12px;padding:12px}
+canvas{width:100%;height:210px;background:#0a0b14;border-radius:14px;display:block}
+
+/* LIGHT */
+body.light,#app.light{background:#f4f5fa;color:#161724}
+.light .topbar,.light .bottom{background:#ffffffed;border-color:#ddd}
+.light .card,.light .asset,.light .modalBox,.light .authCard{background:#fff;border-color:#ddd}
+.light .iconBtn,.light .quick,.light .secondary,.light .badge{background:#eeeef5;color:#222}
+.light .field input,.light .field select{background:#f7f7fb;color:#222;border-color:#ccc}
+.light .bottom{color:#555}
+.light .navBtn{color:#777}
+.light .small,.light .subtitle,.light .field label{color:#666}
+.light .listItem{border-color:#ddd}
+
+/* LARGE TEXT */
+.largeText{font-size:17px}
+.largeText .small,.largeText .subtitle,.largeText .field label{font-size:14px}
+
+@media(min-width:700px){
+ .content{padding-left:25px;padding-right:25px}
+ .bottom{max-width:650px;left:50%;transform:translateX(-50%);border-radius:20px 20px 0 0}
+ .modal{align-items:center}
+ .modalBox{border-radius:22px}
+}
+
+
+/* PREMIUM VISUAL POLISH — presentation only */
+:root{color-scheme:dark}
+#auth .authLogo{
+ position:relative;isolation:isolate;
+ animation:authLogoFloat 4s ease-in-out infinite,authLogoGlow 2.8s ease-in-out infinite;
+}
+#auth .authLogo:before{
+ content:"";position:absolute;inset:-9px;border-radius:50%;
+ border:1px solid #e8c979a8;border-left-color:transparent;border-bottom-color:#8b74d6;
+ box-shadow:0 0 17px #d4ad5b40;animation:authLogoSpin 7s linear infinite;
+}
+#auth .authLogo:after{
+ content:"";position:absolute;inset:-15px;border-radius:50%;
+ border:1px dashed #d7b86b55;animation:authLogoSpin 14s linear infinite reverse;
+}
+#auth .authLogo span{position:relative;z-index:2;text-shadow:0 0 15px #f5d88b88}
+@keyframes authLogoSpin{to{transform:rotate(360deg)}}
+@keyframes authLogoFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
+@keyframes authLogoGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+
+/* Richer app shell and premium home dashboard */
+#app{background:radial-gradient(ellipse at 50% -15%,#1d2940 0%,#0a1020 42%,#070a13 100%)}
+.topbar{
+ background:linear-gradient(110deg,#111d30ed,#111326ed 55%,#1a1730ed);
+ border-bottom:1px solid #c5a15a42;box-shadow:0 8px 30px #0004;
+}
+.brand{letter-spacing:.25px}
+.miniLogo{
+ border:1px solid #e6c879;background:radial-gradient(circle at 30% 25%,#4b3a68,#17172b 65%);
+ box-shadow:0 0 0 4px #d0ad5b12,0 0 22px #b68c4b55,inset 0 1px 8px #fff2;
+}
+.content{padding-top:24px}
+.page.active{animation:premiumPageIn .32s ease both}
+@keyframes premiumPageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.page h2{color:#f7e9c9;letter-spacing:.2px}
+.subtitle{color:#aab5c5}
+.card,.asset{
+ background:linear-gradient(145deg,#19253a 0%,#111a2b 58%,#111426 100%);
+ border:1px solid #c6a45a2e;border-radius:19px;
+ box-shadow:0 12px 30px #0002,inset 0 1px 0 #ffffff0b;
+}
+.balanceCard{
+ background:radial-gradient(circle at 85% 10%,#4b3b68 0%,transparent 42%),linear-gradient(135deg,#263b56,#14233a 60%,#17152d);
+ border:1px solid #d7b66b77;box-shadow:0 14px 35px #0004,0 0 24px #b68c4b12;
+}
+#homePage .grid .card{min-height:102px;position:relative;overflow:hidden}
+#homePage .grid .card:after{
+ content:"";position:absolute;width:95px;height:95px;border-radius:50%;right:-40px;bottom:-55px;
+ border:1px solid #d8bd7830;box-shadow:0 0 25px #c49c4b0d;
+}
+#homePage .grid .amount{font-size:clamp(21px,5vw,29px);letter-spacing:.2px;color:#f3e6c7}
+#homePage .grid .amount.gold{color:#e8c979}
+#homePage .small{color:#b2bdca}
+.quickGrid{gap:10px}
+.quick{
+ background:linear-gradient(145deg,#202c42,#141c2e);border:1px solid #c4a25b3d;
+ color:#f3ead8;border-radius:15px;box-shadow:0 7px 18px #0002;
+ transition:transform .2s,border-color .2s,box-shadow .2s;
+}
+.quick b{color:#e4c579;text-shadow:0 0 12px #d3ad5c55}
+.quick:hover{transform:translateY(-2px);border-color:#d8bb78;box-shadow:0 10px 23px #0004}
+.iconBtn,.assetButtons button,.close{
+ background:linear-gradient(145deg,#26364c,#171f32);border:1px solid #c7a45b4a;color:#f4e6c6;
+ box-shadow:inset 0 1px 0 #fff1;transition:filter .2s,transform .2s;
+}
+.iconBtn:hover,.assetButtons button:hover,.close:hover{filter:brightness(1.18);transform:translateY(-1px)}
+.bottom{
+ background:linear-gradient(90deg,#101b2ded,#17172bed,#101b2ded);
+ border-top:1px solid #c7a45b55;box-shadow:0 -10px 30px #0004;
+}
+.navBtn{color:#9ba8b8;transition:color .2s}
+.navBtn.active{color:#e8c879;text-shadow:0 0 15px #d5b56877}
+.navBtn.active b{filter:drop-shadow(0 0 7px #d7b66b66)}
+.modal{background:#030711b8;backdrop-filter:blur(7px)}
+.modalBox{
+ background:linear-gradient(145deg,#1b2940,#10182a 70%,#17152b);
+ border:1px solid #d0ad5b66;box-shadow:0 25px 80px #000a,0 0 30px #b68c4b18;
+}
+.toast{
+ background:linear-gradient(110deg,#263c55,#171b30);border:1px solid #d7b66b88;
+ box-shadow:0 12px 35px #0008,0 0 22px #c49c4b22;color:#fff3d6;
+}
+.stat{background:linear-gradient(145deg,#1e2d43,#141b2d);border:1px solid #c6a45a30;border-radius:14px}
+.asset{box-shadow:0 10px 26px #0003}
+.assetPrice{color:#f2e5c7}
+.green{color:#51e09b!important;text-shadow:0 0 12px #35c98230}
+.red{color:#ff737b!important;text-shadow:0 0 12px #ff5c6828}
+canvas{background:linear-gradient(145deg,#0d1728,#0a101d);border:1px solid #c5a15a38;box-shadow:inset 0 1px 12px #0005}
+
+/* Premium light-theme compatibility */
+.light #app{background:radial-gradient(ellipse at 50% -15%,#f8f0df,#edf1f6 48%,#e6ebf2)}
+.light .topbar,.light .bottom{background:#fffaf0ed;border-color:#d5c49d;box-shadow:0 8px 25px #26374a14}
+.light .page h2{color:#182b40}
+.light .card,.light .asset,.light .stat,.light .modalBox{
+ background:linear-gradient(145deg,#fffefa,#f3f5f8);border-color:#d9c99f;box-shadow:0 10px 25px #24364a10;
+}
+.light .balanceCard{background:linear-gradient(135deg,#e8dfc8,#dce7ef);border-color:#c5a45d}
+.light #homePage .grid .amount{color:#182b40}
+.light #homePage .grid .amount.gold{color:#98702e}
+.light .quick{background:linear-gradient(145deg,#fffefa,#f0f2f6);color:#182b40;border-color:#d9c99f}
+.light .quick b{color:#a47c38}
+.light .navBtn.active{color:#9a702e}
+.light .iconBtn{background:#f4efe3;color:#182b40;border-color:#d8c79f}
+.light .subtitle,.light .small{color:#687585}
+.light canvas{background:#f5f7fa;border-color:#d9c99f}
+@media(max-width:390px){.quickGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.quick{font-size:10px;min-height:74px}}
+@media(prefers-reduced-motion:reduce){#auth .authLogo,#auth .authLogo:before,#auth .authLogo:after,.page.active,.quick{animation:none!important;transition:none!important}}
+
+
+
+/* PREMIUM FINISH — visual-only polish across every app page */
+#app .content{padding-bottom:108px}
+#app .page h2{font-weight:800;text-shadow:0 2px 18px #d6b86b18}
+#app .page h3{color:#f0dfb8;margin-top:5px}
+#app .formCard{background:linear-gradient(145deg,#1a2940,#10192a 72%,#17152a);border-color:#c6a45a45}
+#app .field input,#app .field select,#app input.search,#app select{
+ background:#0b1524;color:#f6f0e4;border:1px solid #46536a;border-radius:12px;
+ transition:border-color .2s,box-shadow .2s,background .2s;
+}
+#app .field input:focus,#app .field select:focus,#app input.search:focus,#app select:focus{
+ outline:none;border-color:#d7b66b;box-shadow:0 0 0 3px #d7b66b20;background:#101e30;
+}
+#app .secondary{background:linear-gradient(120deg,#263951,#1a2639);border:1px solid #c6a45a55;color:#f3e8cf;
+ box-shadow:inset 0 1px 0 #ffffff12;transition:transform .18s,filter .18s,border-color .18s}
+#app .secondary:hover{filter:brightness(1.12);border-color:#e2c47a;transform:translateY(-1px)}
+#app .primary{border:1px solid #f1d99c;background:linear-gradient(110deg,#f1dda9,#c9a35e 55%,#a87d43);
+ box-shadow:0 10px 24px #b48a4430,inset 0 1px 0 #fff9}
+#app .listItem{border-bottom-color:#c6a45a24}
+#app .avatar{background:linear-gradient(145deg,#59467c,#253b54);border:1px solid #d0ad5b66;color:#fff1cf}
+#app .badge{background:#29364a;border:1px solid #c6a45a44;color:#f0dfbb}
+#app .assetTop{align-items:center}
+#app .assetButtons button{border:1px solid #c6a45a55}
+#app .stat b{display:block;margin-top:5px;color:#f1e4c5;font-size:16px}
+#app .modalHead strong{color:#f5e7c8;font-size:17px}
+#app .close{font-size:22px}
+#app .toast{font-weight:650;letter-spacing:.15px}
+#app button:focus-visible{outline:2px solid #f0d58e;outline-offset:3px}
+.light #app .page h3,.light #app .modalHead strong{color:#263b52}
+.light #app .formCard{background:linear-gradient(145deg,#fffefa,#f1f4f8);border-color:#d7c79e}
+.light #app .field input,#app.light .field input,#app.light .field select,#app.light input.search,#app.light select{background:#fff;color:#182b40;border-color:#d4dce5}
+.light #app .secondary,#app.light .secondary{background:linear-gradient(120deg,#f8f2e5,#e8edf3);color:#263b52;border-color:#d7c79e}
+.light #app .stat b{color:#263b52}
+@media(max-width:420px){
+ #app .content{padding-left:12px;padding-right:12px}
+ #app .card,#app .asset{padding:14px}
+ #app .amount{font-size:23px}
+}
+@media(prefers-reduced-motion:reduce){#app .page.active,#app .quick,#app button{animation:none!important;transition:none!important}}
+
+
+/* Premium emblem and selectable bank/operator cards */
+.premiumMark{width:70%;height:70%;display:block;overflow:visible;filter:drop-shadow(0 0 9px #d9b45d55)}
+#splash .premiumMark{width:78%;height:78%}
+.miniLogo .premiumMark{width:100%;height:100%;padding:3px}
+.bankSelectWrap{position:relative;width:100%;z-index:30}
+.bankSelectTrigger{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:linear-gradient(145deg,#18283c,#0d1727);border:1px solid #9a7b43;border-radius:13px;color:#f6f0e4;padding:10px 14px;min-height:58px;box-shadow:inset 0 1px 0 #ffffff12,0 5px 16px #0002}
+.bankSelectTrigger:focus-visible{outline:2px solid #f0d58e;outline-offset:3px}
+.bankSelectTrigger .bankSelectName{font-size:14px;font-weight:750;flex:1}
+.bankSelectArrow{font-size:20px;line-height:1;color:#e5c777;flex:0 0 auto;pointer-events:none}
+.bankBrandMark{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:900;letter-spacing:-.35px;border:1px solid #ffffff75;box-shadow:inset 0 1px 0 #ffffff55,0 3px 9px #0004;position:relative;overflow:hidden}
+.bankBrandMarkEmpty{display:none}
+.bankBrandMark:before{content:"";position:absolute;inset:3px;border:1px solid #ffffff65;border-radius:9px}
+.bankBrandMark span{position:relative;text-shadow:0 1px 2px #0008}
+.bankSelectMenu{position:absolute;z-index:1000;left:0;right:0;top:calc(100% + 7px);display:none;max-height:270px;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:7px;border:1px solid #c6a45a;border-radius:14px;background:#111d2e;box-shadow:0 16px 35px #000b;isolation:isolate}
+.bankSelectMenuHeading{position:sticky;top:-7px;z-index:2;margin:-7px -7px 3px;padding:11px 12px;background:#111d2e;color:#e9ce8c;border-bottom:1px solid #c6a45a55;font-size:10px;font-weight:900;letter-spacing:1.5px}
+.light .bankSelectMenu{background:#f5f7fa}
+.light .bankSelectMenuHeading{background:#f5f7fa;color:#795c2b}
+.bankSelectMenu.open{display:grid;gap:5px}
+.bankSelectOption{display:flex;align-items:center;gap:11px;width:100%;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:#f6f0e4;text-align:left}
+.bankSelectOption:hover,.bankSelectOption.active{background:linear-gradient(110deg,#d6b66b22,#ffffff08);border-color:#c6a45a88}
+.bankSelectOption strong{font-size:12px;font-weight:700}
+.light .bankSelectTrigger{background:linear-gradient(145deg,#fffefa,#edf1f6);color:#203149;border-color:#c6a45a}
+.light .bankSelectMenu{background:linear-gradient(145deg,#fffefa,#edf1f6);border-color:#c6a45a}
+.light .bankSelectOption{color:#203149}
+.light .bankSelectOption:hover,.light .bankSelectOption.active{background:#e8dfca}
+.bankChoice,.providerChoice{display:flex;align-items:center;gap:10px;text-align:left;padding:11px;border-radius:13px;background:linear-gradient(145deg,#18283c,#0d1727);border:1px solid #35445a;color:#f6f0e4;min-width:0}
+.bankChoice.active,.providerChoice.active{border-color:#e5c777;box-shadow:0 0 0 2px #d9b45d25,inset 0 0 18px #d9b45d10}
+.brandLogo{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;letter-spacing:-.5px;color:white;border:1px solid #ffffff40;background:#243b59}
+.brandLogo.jio{background:#0876c9}.brandLogo.airtel{background:#e32636}.brandLogo.vi{background:linear-gradient(135deg,#6d2b91,#e33c73)}.brandLogo.bsnl{background:#0876b9}
+.bankChoice strong,.providerChoice strong{font-size:12px;line-height:1.25}
+.providerGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:8px 0 14px}
+.planTabs{display:flex;gap:7px;margin:10px 0 13px}
+.planTabs button{flex:1;padding:10px 7px;border-radius:10px;background:#202d41;color:#cbd5e1;border:1px solid #3c4a5f;font-size:12px}
+.planTabs button.active{background:linear-gradient(120deg,#f1dda9,#c49a56);color:#172338;border-color:#f0d58e;font-weight:800}
+.planList{display:grid;gap:9px;max-height:360px;overflow:auto;padding:2px}
+.planCard{padding:13px;border:1px solid #35445a;border-radius:14px;background:linear-gradient(145deg,#1b2b41,#111b2b);text-align:left;color:#f5f0e6;width:100%}
+.planCard.active{border-color:#e5c777;box-shadow:0 0 0 2px #d9b45d25}
+.planTop{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.planPrice{font-size:19px;font-weight:850;color:#f0d48f}
+.planName{font-weight:750;font-size:13px}
+.planMeta{font-size:11px;color:#b9c5d2;line-height:1.55;margin-top:7px}
+.planNote{font-size:10px;color:#d8bd7c;margin-top:6px}
+.field select{appearance:auto}
+.light .bankChoice,.light .providerChoice,.light .planCard{background:#fff;color:#203149;border-color:#d4c69f}
+.light .planMeta{color:#657386}
+@media(max-width:360px){.bankPicker,.providerGrid{grid-template-columns:1fr}}
+
+/* Organised payment catalogue: clear names, details and scrollable plan sections */
+.modalBox:has(.paymentIntro){max-height:88vh;padding:17px}
+.paymentIntro{padding:12px 13px;margin:0 0 13px;border-radius:14px;background:linear-gradient(120deg,#223750,#171d31);border:1px solid #c7a45b35;color:#cbd5e1;font-size:12px;line-height:1.5}
+.paymentSectionTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:13px 1px 8px;color:#f2e4c5;font-size:13px;font-weight:800}
+.paymentSectionTitle small{font-size:10px;color:#aab5c5;font-weight:500}
+.providerGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 15px}
+.providerChoice{min-height:68px;padding:10px 11px;gap:10px;border-radius:15px;background:linear-gradient(145deg,#20334b,#111c2d);box-shadow:0 7px 18px #0002;transition:transform .18s,border-color .18s,box-shadow .18s}
+.providerChoice:active{transform:scale(.98)}
+.providerChoice .brandLogo{width:42px;height:42px;flex-basis:42px;border-radius:13px;font-size:11px;box-shadow:inset 0 1px 0 #fff4,0 4px 10px #0003}
+.providerChoice .providerWords{display:flex;flex-direction:column;gap:3px;min-width:0}
+.providerChoice strong{font-size:12px;white-space:normal}
+.providerChoice small{font-size:10px;color:#aab8c8;line-height:1.25}
+.planList{max-height:39vh;overflow-y:auto;overscroll-behavior:contain;padding:3px 3px 8px;scrollbar-width:thin;scrollbar-color:#9d824b #172235}
+.planCard{display:block;padding:13px 14px;border-radius:15px;background:linear-gradient(145deg,#1e3048,#111b2b);border:1px solid #46556b;box-shadow:0 6px 16px #0002;transition:border-color .18s,transform .18s,background .18s}
+.planCard.active{border-color:#e8c879;background:linear-gradient(145deg,#3a3441,#18273a);box-shadow:0 0 0 2px #d9b45d22,0 9px 20px #0003}
+.planTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.planName{font-size:13px;font-weight:800;color:#f4e8ce;line-height:1.35}
+.planPrice{font-size:17px;font-weight:900;color:#f0cf82;white-space:nowrap}
+.planMeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;color:#d2dbe5;font-size:11px;line-height:1.4}
+.planMeta .planChip{display:inline-flex;align-items:center;padding:5px 8px;border-radius:8px;background:#293b50;border:1px solid #52627a;color:#e3e9ef}
+.planNote{font-size:10px;line-height:1.45;color:#aab6c5;margin:8px 2px 2px}
+.planTabs{padding:4px;border-radius:13px;background:#0d1727;border:1px solid #3b4b60}
+.planTabs button{border-radius:10px}
+.paymentFields{padding:12px;border:1px solid #c6a45a32;border-radius:15px;background:#111d2e;margin:12px 0}
+.paymentContinue{position:sticky;bottom:-17px;padding:12px 0 2px;background:linear-gradient(180deg,#17243a00,#17243a 28%)}
+.light .paymentIntro,.light .paymentFields{background:#f2f5f8;color:#526173;border-color:#d8c99f}
+.light .paymentSectionTitle,.light .planName{color:#263b52}
+.light .providerChoice,.light .planCard{background:linear-gradient(145deg,#fff,#edf1f6);color:#263b52;border-color:#d6deea}
+.light .providerChoice small,.light .planNote{color:#687585}
+.light .planMeta .planChip{background:#edf1f5;color:#415267;border-color:#d9e0e8}
+
+/* The standard interface stays as-is; this richer skin is enabled only for members. */
+#app.member-premium{background:radial-gradient(ellipse at 50% -18%,#55452c 0%,#1a263b 36%,#080e1a 76%)}
+#app.member-premium .topbar{background:linear-gradient(110deg,#28213a,#172a40 48%,#332a1b);border-bottom:1px solid #f1d58c;box-shadow:0 8px 34px #d3ad5b20}
+#app.member-premium .miniLogo{border:1px solid #ffe6a0;box-shadow:0 0 0 4px #f1d58c25,0 0 27px #e5c16a88,inset 0 1px 9px #fff4}
+#app.member-premium .card,#app.member-premium .asset,#app.member-premium .stat{border-color:#e0bd6a72;box-shadow:0 14px 34px #0004,0 0 18px #c49c4b12,inset 0 1px 0 #fff2}
+#app.member-premium .balanceCard{background:radial-gradient(circle at 82% 8%,#8c6b3c66,transparent 43%),linear-gradient(135deg,#3b4b60,#1b2c42 54%,#332941);border-color:#f4d98e;box-shadow:0 16px 38px #0005,0 0 30px #e2bd6a24}
+#app.member-premium .quick{background:linear-gradient(145deg,#35465a,#1b2638 55%,#342b24);border-color:#d8b76c8a;box-shadow:0 9px 22px #0004,inset 0 1px 0 #fff2}
+#app.member-premium .quick b,#app.member-premium .navBtn.active{color:#ffe09a;text-shadow:0 0 15px #e9c36f88}
+#app.member-premium .bottom{background:linear-gradient(90deg,#211d2c,#1c2c40,#2c251d);border-top:1px solid #e8c879;box-shadow:0 -10px 35px #0005}
+#app.member-premium .primary{background:linear-gradient(110deg,#fff0bd,#e5bf6a 52%,#a87936);border-color:#fff0bd;color:#251b12;box-shadow:0 10px 28px #d6ad5b40,inset 0 1px 0 #fff}
+#app.member-premium .page h2{color:#ffe8b0;text-shadow:0 2px 22px #e4c16c35}
+#app.member-premium .memberRibbon{display:inline-flex;align-items:center;gap:6px;margin:0 0 12px;padding:6px 10px;border-radius:30px;background:linear-gradient(110deg,#f8e6b1,#bd914b);color:#2b2116;font-size:10px;font-weight:900;letter-spacing:1px;box-shadow:0 5px 16px #d2ad5b35}
+.light #app.member-premium{background:radial-gradient(ellipse at 50% -18%,#f9eac8,#edf1f6 55%,#e5eaf1)}
+.light #app.member-premium .topbar,.light #app.member-premium .bottom{background:linear-gradient(110deg,#fff8e8,#f0f4f8);border-color:#c8a45b}
+.light #app.member-premium .card,.light #app.member-premium .asset,.light #app.member-premium .stat{border-color:#d5bd83}
+@media(max-width:380px){.providerChoice{padding:9px;gap:8px}.providerChoice .brandLogo{width:37px;height:37px;flex-basis:37px}.providerChoice strong{font-size:11px}.planPrice{font-size:15px}}
+
+
+/* Payments screen refresh — isolated to the main Payments page */
+#paymentsPage{position:relative;isolation:isolate;min-height:calc(100vh - 155px);padding-bottom:22px}
+#paymentsPage>.paymentsWatermark{position:absolute;inset:0;z-index:0;display:flex;justify-content:center;align-items:flex-start;overflow:hidden;pointer-events:none}
+#paymentsPage .paymentsWatermarkMark{width:clamp(250px,68vw,540px);height:auto;margin-top:135px;opacity:.105;filter:drop-shadow(0 0 24px #d8ad5530)}
+#paymentsPage>.paymentsHeading,#paymentsPage>.paymentsGroup{position:relative;z-index:1}
+#paymentsPage .paymentsHeading{margin-bottom:22px}
+#paymentsPage .paymentsHeading .subtitle{margin-bottom:0}
+#paymentsPage .paymentsGroup{margin:0 0 23px}
+#paymentsPage .paymentsGroupHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 10px;color:#f0dfbb;font-size:13px;font-weight:850;letter-spacing:.25px}
+#paymentsPage .paymentsGroupHeading small{font-size:10px;font-weight:600;color:#aab5c5;letter-spacing:0}
+#paymentsPage .paymentsServiceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+#paymentsPage .paymentService{display:flex;align-items:center;gap:11px;min-width:0;min-height:78px;padding:12px;text-align:left;color:#f4ead7;background:linear-gradient(145deg,#1c2b42ed,#111a2bed 72%,#17172bed);border:1px solid #c6a45a55;border-radius:16px;box-shadow:0 9px 22px #0003,inset 0 1px 0 #ffffff10;transition:transform .18s,border-color .18s,box-shadow .18s,filter .18s}
+#paymentsPage .paymentService:active{transform:scale(.975)}
+#paymentsPage .paymentService:focus-visible{outline:2px solid #f0d48f;outline-offset:3px}
+#paymentsPage .paymentServiceIcon{display:flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,#35445a,#1c293d);border:1px solid #d7b66b50;font-size:21px;box-shadow:inset 0 1px 0 #fff2}
+#paymentsPage .paymentServiceText{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+#paymentsPage .paymentServiceText strong{font-size:12px;line-height:1.3;font-weight:850;color:#f6e9cd}
+#paymentsPage .paymentServiceText small{font-size:10px;line-height:1.3;color:#aebaca}
+#paymentsPage .paymentServiceArrow{font-size:24px;line-height:1;color:#dfbd70;margin-left:auto}
+#paymentsPage .paymentService:hover{transform:translateY(-2px);border-color:#e6c879;box-shadow:0 13px 26px #0004,0 0 17px #d6ad5b18}
+#app.member-premium #paymentsPage .paymentsWatermarkMark{opacity:.15;filter:drop-shadow(0 0 30px #e5c16a55)}
+#app.member-premium #paymentsPage .paymentService{background:linear-gradient(145deg,#3b3a3bed,#1b2b40ed 58%,#3a2e20ed);border-color:#e5c779a8;box-shadow:0 11px 26px #0004,0 0 18px #d6ad5b1c,inset 0 1px 0 #fff3}
+#app.member-premium #paymentsPage .paymentServiceIcon{background:linear-gradient(145deg,#665238,#2c3040);border-color:#f0d48f88;color:#ffe7a7}
+#app.member-premium #paymentsPage .paymentServiceArrow{color:#ffe09a}
+.light #paymentsPage .paymentsGroupHeading{color:#263b52}
+.light #paymentsPage .paymentsGroupHeading small{color:#687585}
+.light #paymentsPage .paymentsWatermarkMark{opacity:.075}
+.light #paymentsPage .paymentService{background:linear-gradient(145deg,#fffefaed,#edf1f6ed);color:#263b52;border-color:#d5c49d;box-shadow:0 8px 20px #24364a12,inset 0 1px 0 #fff}
+.light #paymentsPage .paymentServiceText strong{color:#263b52}
+.light #paymentsPage .paymentServiceText small{color:#687585}
+.light #paymentsPage .paymentServiceIcon{background:linear-gradient(145deg,#f7f0df,#e7edf4);border-color:#d8c79f}
+.light #paymentsPage .paymentServiceArrow{color:#9a702e}
+.light #app.member-premium #paymentsPage .paymentService{background:linear-gradient(145deg,#fff8e8ed,#edf1f6ed);border-color:#d5bd83}
+@media(max-width:380px){#paymentsPage .paymentsServiceGrid{gap:8px}#paymentsPage .paymentService{gap:8px;min-height:74px;padding:9px}#paymentsPage .paymentServiceIcon{flex-basis:36px;width:36px;height:36px;font-size:19px}#paymentsPage .paymentServiceText strong{font-size:11px}#paymentsPage .paymentServiceText small{font-size:9px}}
+@media(prefers-reduced-motion:reduce){#paymentsPage .paymentService{transition:none!important}}
+
+
+/* LIGHT THEME CONTRAST FIX — overrides dark premium component rules without changing layout */
+body.light #app{background:radial-gradient(ellipse at 50% -15%,#fff8e9 0%,#eef2f7 48%,#e5ebf2 100%)!important;color:#1b2b3d!important}
+body.light #app .page h2,body.light #app .page h3,body.light #app #hello{color:#1b2b3d!important;text-shadow:none!important}
+body.light #app .subtitle,body.light #app .small,body.light #app .page p{color:#617083}
+body.light #app .card,body.light #app .asset,body.light #app .stat,body.light #app .formCard{background:linear-gradient(145deg,#fffefa,#f0f3f7)!important;color:#26384d!important;border-color:#d8c79e!important;box-shadow:0 9px 24px #26374a12!important}
+body.light #app .balanceCard,body.light #app.member-premium .balanceCard{background:linear-gradient(135deg,#fff8e9,#e9eff5)!important;color:#1b2b3d!important;border-color:#c8a65f!important}
+body.light #app .balanceCard *,body.light #app.member-premium .balanceCard *{color:#26384d!important;text-shadow:none!important}
+body.light #app .balanceCard .small{color:#657386!important}
+body.light #app .quick,body.light #app.member-premium .quick{background:linear-gradient(145deg,#fffefa,#e9eef4)!important;color:#26384d!important;border-color:#d8c79e!important;box-shadow:0 6px 16px #26374a12!important}
+body.light #app .quick b,body.light #app .navBtn.active{color:#9a702e!important;text-shadow:none!important}
+body.light #app .topbar,body.light #app .bottom{background:linear-gradient(110deg,#fff9eced,#edf2f7ed)!important;color:#26384d!important;border-color:#d7c79f!important}
+body.light #app .navBtn{color:#657386}
+body.light #app .secondary,body.light #app .iconBtn,body.light #app .close{background:linear-gradient(120deg,#f8f2e5,#e8edf3)!important;color:#26384d!important;border-color:#d7c79f!important}
+body.light #app .field label{color:#526276!important}
+body.light #app .field input,body.light #app .field select,body.light #app input.search,body.light #app select{background:#fff!important;color:#26384d!important;border-color:#cbd5df!important}
+body.light #app .listItem{color:#33465b;border-color:#dce2e8}
+body.light #app .stat b{color:#26384d!important}
+body.light #app .modalBox{background:#fffefa!important;color:#26384d!important}
+body.light #app .modalHead strong{color:#26384d!important}
+body.light #app .toast{color:#fff3d6!important}
+
+/* Per-account premium accent palettes */
+#app.member-premium[data-premium-color="sapphire"] .navBtn.active,#app.member-premium[data-premium-color="sapphire"] .page h2{color:#9bc9ff}
+#app.member-premium[data-premium-color="sapphire"] .card,#app.member-premium[data-premium-color="sapphire"] .asset,#app.member-premium[data-premium-color="sapphire"] .stat{border-color:#75aeea88}
+#app.member-premium[data-premium-color="sapphire"] .quick b{color:#9bc9ff}
+#app.member-premium[data-premium-color="emerald"] .navBtn.active,#app.member-premium[data-premium-color="emerald"] .page h2{color:#8be0b8}
+#app.member-premium[data-premium-color="emerald"] .card,#app.member-premium[data-premium-color="emerald"] .asset,#app.member-premium[data-premium-color="emerald"] .stat{border-color:#70c99c88}
+#app.member-premium[data-premium-color="emerald"] .quick b{color:#8be0b8}
+#app.member-premium[data-premium-color="violet"] .navBtn.active,#app.member-premium[data-premium-color="violet"] .page h2{color:#c7a8ff}
+#app.member-premium[data-premium-color="violet"] .card,#app.member-premium[data-premium-color="violet"] .asset,#app.member-premium[data-premium-color="violet"] .stat{border-color:#a98be888}
+#app.member-premium[data-premium-color="violet"] .quick b{color:#c7a8ff}
+#app.member-premium[data-premium-color="rose"] .navBtn.active,#app.member-premium[data-premium-color="rose"] .page h2{color:#ffabc2}
+#app.member-premium[data-premium-color="rose"] .card,#app.member-premium[data-premium-color="rose"] .asset,#app.member-premium[data-premium-color="rose"] .stat{border-color:#e99ab288}
+#app.member-premium[data-premium-color="rose"] .quick b{color:#ffabc2}
+body.light #app.member-premium[data-premium-color] .page h2{color:#26384d!important}
+body.light #app.member-premium[data-premium-color] .navBtn.active{color:#9a702e!important}
+
+
+/* LOAN MODULE — scoped so existing screens and themes are untouched */
+.loanHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.loanHead h2{margin:0 0 5px}.loanMark{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;color:#17243a;font-weight:900;font-size:25px;background:linear-gradient(140deg,#ffe7a7,#bd9146);box-shadow:0 6px 20px #bd914633}
+.loanHero{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:19px;border:1px solid #d6b46788;border-radius:20px;background:radial-gradient(circle at 90% 20%,#6951a34d,transparent 42%),linear-gradient(125deg,#253b59,#151a32 72%);box-shadow:0 12px 30px #0003;margin-bottom:13px;overflow:hidden}.loanHero h3,.loanLendHero h3{font-size:19px;margin:7px 0;color:#ffdf91}.loanHero p,.loanLendHero p{font-size:12px;color:#d1d7e0;margin:0 0 13px}.loanEyebrow{font-size:9px;letter-spacing:1.6px;font-weight:900;color:#f0ce78}.loanHeroArt{font-size:66px;filter:drop-shadow(0 7px 15px #0007)}.loanGoldBtn{padding:11px 16px;border-radius:11px;background:linear-gradient(110deg,#ffe6a0,#c39442);color:#17243a;font-size:12px;font-weight:900;box-shadow:0 6px 17px #bd914633}.loanGoldBtn.full{width:100%;margin-top:12px}.loanStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 22px}.loanStat{padding:12px 9px;border-radius:13px;background:linear-gradient(145deg,#1e2d43,#141b2d);border:1px solid #c6a45a36;min-width:0}.loanStat span{display:block;color:#aeb9c8;font-size:10px;line-height:1.4}.loanStat b{display:block;margin-top:6px;color:#f2d68e;font-size:15px;overflow-wrap:anywhere}.loanSectionTitle{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:20px 0 10px}.loanSectionTitle h3{margin:0;color:#f5e4bd;font-size:17px}.loanSectionTitle p{margin:4px 0 0;color:#aab5c5;font-size:11px}.loanTag{font-size:9px;font-weight:800;color:#f2d58e;border:1px solid #c6a45a75;padding:6px 8px;border-radius:20px;white-space:nowrap}.loanFilters{display:flex;gap:7px;overflow-x:auto;padding:2px 0 11px;scrollbar-width:none}.loanFilters button,.loanChoice button{flex:none;border:1px solid #596176;background:#172238;color:#d5dce6;border-radius:20px;padding:8px 12px;font-size:10px;font-weight:700}.loanFilters button.active,.loanChoice button.active{background:linear-gradient(120deg,#ffe7a1,#c29443);color:#17243a;border-color:#e6c477}.loanOfferList{display:grid;gap:10px}.loanOffer{display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:11px;padding:12px;border-radius:16px;background:linear-gradient(145deg,#1d2b43,#121a2c);border:1px solid #c6a45a38;box-shadow:0 7px 18px #0002}.loanOfferIcon{width:62px;height:62px;display:grid;place-items:center;border-radius:13px;font-size:32px;background:linear-gradient(145deg,#344f78,#20223f);border:1px solid #d6b46755}.loanOffer h4{font-size:13px;margin:0 0 5px;color:#fff0cf}.loanOffer .loanRange{font-size:11px;color:#e4e8ef}.loanOffer .loanMeta{font-size:10px;color:#e5c777;margin-top:4px;line-height:1.45}.loanApplyMini{padding:9px 10px;border-radius:10px;background:linear-gradient(120deg,#ffe7a1,#c29443);color:#17243a;font-size:10px;font-weight:900}.loanActiveCard{padding:14px;margin-bottom:10px;border-radius:16px;background:linear-gradient(145deg,#1b2a40,#12192b);border:1px solid #c6a45a48}.loanActiveTop{display:flex;justify-content:space-between;gap:8px;align-items:center}.loanActiveTop b{color:#ffe3a0}.loanPill{font-size:9px;padding:5px 8px;border-radius:20px;background:#174c3b;color:#8ff0bd}.loanProgress{height:6px;border-radius:8px;background:#ffffff20;margin:11px 0 8px;overflow:hidden}.loanProgress span{display:block;height:100%;background:linear-gradient(90deg,#d8b25e,#ffe6a0)}.loanDueRow{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#cbd3df;margin-top:8px}.loanDueRow strong{color:#f4d68e}.loanPayBtn{width:100%;padding:11px;border-radius:10px;margin-top:12px;background:linear-gradient(110deg,#ffe6a0,#c39442);color:#17243a;font-weight:900;font-size:11px}.loanLendHero{display:flex;gap:13px;align-items:center;padding:16px;border-radius:17px;margin:24px 0 10px;border:1px solid #9d80e277;background:linear-gradient(120deg,#29224d,#17223b 70%,#142039)}.loanLendIcon{font-size:39px}.loanLendHero h3{font-size:16px}.loanLendHero p{margin:0}.loanLendCard{padding:15px}.loanField{margin:12px 0}.loanField label{display:block;font-size:11px;font-weight:700;color:#cbd5e1;margin-bottom:7px}.loanField input{width:100%;padding:12px;border-radius:10px;border:1px solid #596176;background:#0c1728;color:#fff;font-size:14px}.loanChoice{display:flex;gap:8px}.loanChoice button{flex:1;border-radius:10px;padding:11px}.loanLendPreview{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;border-radius:11px;background:#0c1728;color:#bdc8d6;font-size:11px}.loanLendPreview b{font-size:16px;color:#f5d88e}.loanReminderInfo{display:flex;gap:11px;padding:14px;margin:17px 0;border:1px solid #c6a45a55;border-radius:14px;background:linear-gradient(120deg,#292541,#172238);font-size:21px}.loanReminderInfo b{font-size:12px;color:#ffe2a0}.loanReminderInfo p{font-size:10px;line-height:1.5;color:#c4ccda;margin:5px 0 0}.loanDisclaimer{font-size:9px;line-height:1.5;color:#9daabd;margin:10px 2px}.loanDisclaimer.center{text-align:center}.loanEmpty{text-align:center;padding:18px;color:#aeb9c8;font-size:12px;border:1px dashed #8b8b9a55;border-radius:14px}
+.light .loanHero{background:linear-gradient(125deg,#fff5df,#eef2f8);border-color:#d7bd83}.light .loanHero h3,.light .loanSectionTitle h3{color:#263a53}.light .loanHero p,.light .loanSectionTitle p{color:#667386}.light .loanStat,.light .loanOffer,.light .loanActiveCard,.light .loanLendCard{background:linear-gradient(145deg,#fffefa,#f1f4f8);border-color:#d9c99f}.light .loanStat span,.light .loanOffer .loanRange,.light .loanActiveCard,.light .loanField label{color:#536174}.light .loanStat b,.light .loanOffer h4,.light .loanActiveTop b{color:#253950}.light .loanFilters button,.light .loanChoice button{background:#eef1f5;color:#34465a;border-color:#d1d9e2}.light .loanFilters button.active,.light .loanChoice button.active{background:linear-gradient(120deg,#ffe7a1,#c29443);color:#17243a}.light .loanOffer .loanMeta{color:#8a6427}.light .loanLendHero{background:linear-gradient(120deg,#f1eafa,#edf2f8);border-color:#d5c6eb}.light .loanLendHero p{color:#5e6878}.light .loanLendHero h3{color:#4b3d72}.light .loanField input,.light .loanLendPreview{background:#f7f8fb;color:#24364b;border-color:#d2dbe5}.light .loanReminderInfo{background:#f5f0ff;border-color:#d9c7ef}.light .loanReminderInfo b{color:#493c6d}.light .loanReminderInfo p,.light .loanDisclaimer{color:#687487}.light .loanEmpty{color:#657286;border-color:#cdd5df}
+@media(max-width:390px){.loanOffer{grid-template-columns:52px minmax(0,1fr) auto;gap:8px;padding:10px}.loanOfferIcon{width:50px;height:50px;font-size:26px}.loanApplyMini{padding:8px}.loanStat{padding:10px 7px}.loanStat b{font-size:13px}}
+
+
+/* Premium accent colours — apply consistently across the premium interface */
+#app.member-premium[data-premium-color="gold"]{--premium-accent:#f1d58e;--premium-accent-soft:#d8b45e;--premium-accent-ink:#251b12}
+#app.member-premium[data-premium-color="sapphire"]{--premium-accent:#9bc9ff;--premium-accent-soft:#438bd1;--premium-accent-ink:#10243b}
+#app.member-premium[data-premium-color="emerald"]{--premium-accent:#8be0b8;--premium-accent-soft:#319b70;--premium-accent-ink:#102b22}
+#app.member-premium[data-premium-color="violet"]{--premium-accent:#c7a8ff;--premium-accent-soft:#8961cf;--premium-accent-ink:#24163b}
+#app.member-premium[data-premium-color="rose"]{--premium-accent:#ffabc2;--premium-accent-soft:#d96b91;--premium-accent-ink:#351522}
+#app.member-premium[data-premium-color] .topbar,
+#app.member-premium[data-premium-color] .bottom{border-color:var(--premium-accent)!important}
+#app.member-premium[data-premium-color] .page h2,
+#app.member-premium[data-premium-color] .navBtn.active,
+#app.member-premium[data-premium-color] .quick b{color:var(--premium-accent)!important;text-shadow:0 0 12px color-mix(in srgb,var(--premium-accent) 38%,transparent)!important}
+#app.member-premium[data-premium-color] .card,
+#app.member-premium[data-premium-color] .asset,
+#app.member-premium[data-premium-color] .stat,
+#app.member-premium[data-premium-color] .quick,
+#app.member-premium[data-premium-color] .balanceCard{border-color:color-mix(in srgb,var(--premium-accent) 68%,transparent)!important}
+#app.member-premium[data-premium-color] .memberRibbon{background:linear-gradient(110deg,var(--premium-accent),var(--premium-accent-soft))!important;color:var(--premium-accent-ink)!important}
+#app.member-premium[data-premium-color] .primary,
+#app.member-premium[data-premium-color] .loanGoldBtn,
+#app.member-premium[data-premium-color] .loanPayBtn{background:linear-gradient(110deg,var(--premium-accent),var(--premium-accent-soft))!important;border-color:var(--premium-accent)!important;color:var(--premium-accent-ink)!important}
+#app.member-premium[data-premium-color] .miniLogo{border-color:var(--premium-accent)!important;box-shadow:0 0 0 4px color-mix(in srgb,var(--premium-accent) 20%,transparent),0 0 24px color-mix(in srgb,var(--premium-accent) 45%,transparent)!important}
+body.light #app.member-premium[data-premium-color] .page h2{color:var(--premium-accent-soft)!important}
+body.light #app.member-premium[data-premium-color] .navBtn.active{color:var(--premium-accent-soft)!important}
+
+</style>
+</head>
+
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+ <div class="splashBox">
+  <div class="logo"><svg class="premiumMark" viewBox="0 0 100 100" role="img" aria-label="Bank Simulator premium emblem"><defs><linearGradient id="markGold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b7"/><stop offset=".48" stop-color="#d8ad55"/><stop offset="1" stop-color="#8f642d"/></linearGradient></defs><path d="M50 5 88 25v39L50 95 12 64V25Z" fill="#151b2c" stroke="url(#markGold)" stroke-width="3"/><path d="M50 18 76 31v28L50 81 24 59V31Z" fill="#26344b" stroke="#e7c777" stroke-width="1.5"/><path d="M29 43 50 31l21 12M34 47h32M38 48v17m12-17v17m12-17v17M31 68h38" fill="none" stroke="url(#markGold)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="m74 17 2.8 6 6.2 2.8-6.2 2.7-2.8 6.2-2.7-6.2-6.2-2.7 6.2-2.8Z" fill="#fff0b7"/></svg></div>
+  <h1>Bank Simulator</h1>
+  <p>Secure Banking Simulator</p>
+ </div>
+</div>
+
+<!-- AUTH -->
+<section id="auth">
+ <div class="authCard">
+  <div class="logo authLogo"><svg class="premiumMark" viewBox="0 0 100 100" role="img" aria-label="Bank Simulator premium emblem"><defs><linearGradient id="markGold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b7"/><stop offset=".48" stop-color="#d8ad55"/><stop offset="1" stop-color="#8f642d"/></linearGradient></defs><path d="M50 5 88 25v39L50 95 12 64V25Z" fill="#151b2c" stroke="url(#markGold)" stroke-width="3"/><path d="M50 18 76 31v28L50 81 24 59V31Z" fill="#26344b" stroke="#e7c777" stroke-width="1.5"/><path d="M29 43 50 31l21 12M34 47h32M38 48v17m12-17v17m12-17v17M31 68h38" fill="none" stroke="url(#markGold)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="m74 17 2.8 6 6.2 2.8-6.2 2.7-2.8 6.2-2.7-6.2-6.2-2.7 6.2-2.8Z" fill="#fff0b7"/></svg></div>
+  <h2>Bank Simulator</h2>
+  <div class="sub">Banking & payment simulator</div>
+
+  <div class="tabs">
+   <button id="loginTab" class="active" onclick="switchAuth('login')">Login</button>
+   <button id="registerTab" onclick="switchAuth('register')">Register</button>
+  </div>
+
+  <div id="loginForm">
+   <div class="field">
+    <label>Email</label>
+    <input id="loginEmail" type="email" placeholder="Enter email">
+   </div>
+   <div class="field">
+    <label>Account Number</label>
+    <input id="loginAccount" inputmode="numeric" autocomplete="off" placeholder="Enter your simulator account number">
+   </div>
+   <div class="field">
+    <label>Password</label>
+    <input id="loginPassword" type="password" placeholder="Enter password">
+   </div>
+   <button class="primary" onclick="login()">Login</button>
+  </div>
+
+  <div id="registerForm" class="hidden">
+   <div class="field">
+    <label>Name</label>
+    <input id="regName" placeholder="Your name">
+   </div>
+   <div class="field">
+    <label>Email</label>
+    <input id="regEmail" type="email" placeholder="Your email">
+   </div>
+   <div class="field">
+    <label>Password</label>
+    <input id="regPassword" type="password" placeholder="Create password">
+   </div>
+   <div class="field">
+    <label>Account Number</label>
+    <input id="regAccount" inputmode="numeric" autocomplete="off" placeholder="Enter a demo account number">
+    <div class="small">Use a fictional/demo number only. Do not enter real bank details.</div>
+   </div>
+   <div class="field">
+    <label>Choose your bank</label>
+    <div class="bankSelectWrap" id="bankSelectWrap">
+     <button type="button" id="bankPickerSelect" class="bankSelectTrigger" onclick="toggleBankPicker()" aria-haspopup="listbox" aria-expanded="false" aria-label="Choose your bank">
+      <span id="bankPickerSelectedLogo" class="bankBrandMark bankBrandMarkEmpty" aria-hidden="true"></span>
+      <span id="bankPickerSelectedName" class="bankSelectName">Select your bank</span>
+      <span class="bankSelectArrow" aria-hidden="true">⌄</span>
+     </button>
+     <div id="bankPickerMenu" class="bankSelectMenu" role="listbox" aria-label="Available banks"></div>
+    </div>
+    <input id="regBank" type="hidden" value="">
+   </div>
+   <button class="primary" onclick="register()">Create Account</button>
+  </div>
+
+  <div class="note">
+   This application is a local simulator. Use fictional demo credentials only; it is not connected to any real bank or payment network.
+  </div>
+ </div>
+</section>
+
+<!-- APP -->
+<div id="app">
+ <div id="dailyTopNotice" class="dailyTopNotice" role="status" aria-live="polite"></div>
+
+ <header class="topbar">
+  <div class="brand">
+   <div class="miniLogo"><svg class="premiumMark" viewBox="0 0 100 100" role="img" aria-label="Bank Simulator premium emblem"><defs><linearGradient id="markGold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b7"/><stop offset=".48" stop-color="#d8ad55"/><stop offset="1" stop-color="#8f642d"/></linearGradient></defs><path d="M50 5 88 25v39L50 95 12 64V25Z" fill="#151b2c" stroke="url(#markGold)" stroke-width="3"/><path d="M50 18 76 31v28L50 81 24 59V31Z" fill="#26344b" stroke="#e7c777" stroke-width="1.5"/><path d="M29 43 50 31l21 12M34 47h32M38 48v17m12-17v17m12-17v17M31 68h38" fill="none" stroke="url(#markGold)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="m74 17 2.8 6 6.2 2.8-6.2 2.7-2.8 6.2-2.7-6.2-6.2-2.7 6.2-2.8Z" fill="#fff0b7"/></svg></div>
+   <span id="topTitle">Home</span>
+  </div>
+  <div class="topActions">
+   <button class="iconBtn notificationBell" onclick="showNotifications()" aria-label="Notifications">♧<i id="notificationDot" class="notificationDot" aria-hidden="true"></i></button>
+   <button class="iconBtn" onclick="showMore()">⋮</button>
+  </div>
+ </header>
+
+ <main class="content">
+
+  <!-- HOME -->
+  <section id="homePage" class="page active">
+   <h2 id="hello">Hello</h2>
+   <div class="subtitle">Your financial simulator</div>
+
+   <div class="grid">
+    <div class="card balanceCard">
+     <div class="small">Bank Balance</div>
+     <div class="amount" id="homeBank">₹0.00</div>
+    </div>
+    <div class="card">
+     <div class="small">Wallet Balance</div>
+     <div class="amount" id="homeWallet">₹0.00</div>
+    </div>
+    <div class="card">
+     <div class="small">Investment Value</div>
+     <div class="amount gold" id="homeInvest">₹0.00</div>
+    </div>
+    <div class="card">
+     <div class="small">Net Worth</div>
+     <div class="amount" id="homeNet">₹0.00</div>
+    </div>
+   </div>
+
+   <div class="card">
+    <div class="small" style="margin-bottom:10px">Quick Actions</div>
+    <div class="quickGrid">
+     <button class="quick" onclick="openSend()"><b>↗</b>Send</button>
+     <button class="quick" onclick="openAddMoney()"><b>+</b>Add Money</button>
+     <button class="quick" onclick="openRequest()"><b>↓</b>Request</button>
+     <button class="quick" onclick="openScan()"><b>▣</b>Scan & Pay</button>
+     <button class="quick" onclick="showPage('payments')"><b>₹</b>Bills</button>
+     <button class="quick" onclick="showPage('investments')"><b>◈</b>Invest</button>
+     <button class="quick" onclick="showPage('premium')"><b>★</b>Premium</button>
+     <button class="quick" onclick="showCards()"><b>▭</b>Cards</button>
+    </div>
+   </div>
+
+   <div class="card">
+    <div style="display:flex;justify-content:space-between">
+     <strong>Recent Activity</strong>
+     <button class="secondary" style="width:auto;padding:7px 10px;margin:0" onclick="showPage('history')">View All</button>
+    </div>
+    <div id="homeTransactions"></div>
+   </div>
+  </section>
+
+  <!-- UPI -->
+  <section id="upiPage" class="page">
+   <h2>UPI</h2>
+   <div class="subtitle">Send, receive and request money</div>
+
+   <div class="card balanceCard">
+    <div class="small">Your UPI ID</div>
+    <div style="font-size:20px;font-weight:bold;margin:8px 0" id="myUpi"></div>
+    <button class="secondary" onclick="copyText(currentUser().upi)">Copy UPI ID</button>
+   </div>
+
+   <div class="card formCard">
+    <h3>Send Money</h3>
+    <div class="field">
+     <label>Receiver Gmail, UPI ID or Account ID</label>
+     <input id="sendTo" type="text" autocomplete="off" placeholder="name@gmail.com or name@mybank">
+    </div>
+    <div class="field">
+     <label>Amount</label>
+     <input id="sendAmount" type="number" min="1" placeholder="₹ Amount">
+    </div>
+    <div class="field">
+     <label>Note</label>
+     <input id="sendNote" placeholder="Optional note">
+    </div>
+    <button class="primary" onclick="startSend()">Continue</button>
+   </div>
+
+   <div class="grid">
+    <button class="quick" onclick="openRequest()"><b>↓</b>Request Money</button>
+    <button class="quick" onclick="openScan()"><b>▣</b>Scan & Pay</button>
+   </div>
+
+   <div class="card">
+    <h3>My QR</h3>
+    <div id="qr" style="width:190px;height:190px;margin:15px auto;display:grid;grid-template-columns:repeat(15,1fr);gap:1px;background:white;padding:7px"></div>
+    <p class="small center">Simulator QR — not a real payment QR</p>
+   </div>
+  </section>
+
+  <!-- PAYMENTS -->
+  <section id="paymentsPage" class="page">
+   <div class="paymentsWatermark" aria-hidden="true">
+    <svg class="paymentsWatermarkMark" viewBox="0 0 100 100" focusable="false">
+     <defs><linearGradient id="paymentsMarkGold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b7"/><stop offset=".48" stop-color="#d8ad55"/><stop offset="1" stop-color="#8f642d"/></linearGradient></defs>
+     <path d="M50 5 88 25v39L50 95 12 64V25Z" fill="#151b2c" stroke="url(#paymentsMarkGold)" stroke-width="3"/>
+     <path d="M50 18 76 31v28L50 81 24 59V31Z" fill="#26344b" stroke="#e7c777" stroke-width="1.5"/>
+     <path d="M29 43 50 31l21 12M34 47h32M38 48v17m12-17v17m12-17v17M31 68h38" fill="none" stroke="url(#paymentsMarkGold)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+     <path d="m74 17 2.8 6 6.2 2.8-6.2 2.7-2.8 6.2-2.7-6.2-6.2-2.7 6.2-2.8Z" fill="#fff0b7"/>
+    </svg>
+   </div>
+   <div class="paymentsHeading">
+    <h2>Payments</h2>
+    <div class="subtitle">Recharge and bill payments, all in one place</div>
+   </div>
+   <div class="paymentsGroup">
+    <div class="paymentsGroupHeading"><span>Recharge &amp; TV</span><small>2 services</small></div>
+    <div class="paymentsServiceGrid">
+     <button class="paymentService" onclick="openBill('Mobile Recharge')"><span class="paymentServiceIcon">📱</span><span class="paymentServiceText"><strong>Mobile Recharge</strong><small>Prepaid mobile plans</small></span><span class="paymentServiceArrow">›</span></button>
+     <button class="paymentService" onclick="openBill('DTH Recharge')"><span class="paymentServiceIcon">📺</span><span class="paymentServiceText"><strong>TV / DTH Recharge</strong><small>Television subscriptions</small></span><span class="paymentServiceArrow">›</span></button>
+    </div>
+   </div>
+   <div class="paymentsGroup">
+    <div class="paymentsGroupHeading"><span>Home Utilities</span><small>4 services</small></div>
+    <div class="paymentsServiceGrid">
+     <button class="paymentService" onclick="openBill('Electricity')"><span class="paymentServiceIcon">⚡</span><span class="paymentServiceText"><strong>Electricity</strong><small>Power bills</small></span><span class="paymentServiceArrow">›</span></button>
+     <button class="paymentService" onclick="openBill('Water')"><span class="paymentServiceIcon">💧</span><span class="paymentServiceText"><strong>Water</strong><small>Water bills</small></span><span class="paymentServiceArrow">›</span></button>
+     <button class="paymentService" onclick="openBill('Gas')"><span class="paymentServiceIcon">🔥</span><span class="paymentServiceText"><strong>Gas</strong><small>LPG and gas bills</small></span><span class="paymentServiceArrow">›</span></button>
+     <button class="paymentService" onclick="openBill('Broadband')"><span class="paymentServiceIcon">⌁</span><span class="paymentServiceText"><strong>Broadband</strong><small>Internet services</small></span><span class="paymentServiceArrow">›</span></button>
+    </div>
+   </div>
+   <div class="paymentsGroup">
+    <div class="paymentsGroupHeading"><span>More Payments</span><small>4 services</small></div>
+    <div class="paymentsServiceGrid">
+     <button class="paymentService" onclick="openBill('Education Fee')"><span class="paymentServiceIcon">🎓</span><span class="paymentServiceText"><strong>Education Fee</strong><small>School and college fees</small></span><span class="paymentServiceArrow">›</span></button>
+     <button class="paymentService" onclick="openBill('FASTag')"><span class="paymentServiceIcon">🚗</span><span class="paymentServiceText"><strong>FASTag</strong><small>Vehicle toll payments</small></span><span class="paymentServiceArrow">›</span></button>
+     <button class="paymentService" onclick="openBill('Insurance')"><span class="paymentServiceIcon">🛡️</span><span class="paymentServiceText"><strong>Insurance</strong><small>Policy payments</small></span><span class="paymentServiceArrow">›</span></button>
+     <button class="paymentService" onclick="openBill('Other Bill')"><span class="paymentServiceIcon">₹</span><span class="paymentServiceText"><strong>Other Bill</strong><small>Other supported services</small></span><span class="paymentServiceArrow">›</span></button>
+    </div>
+   </div>
+  </section>
+
+  <!-- INVESTMENTS -->
+  <section id="investmentsPage" class="page">
+   <h2>Investments</h2>
+   <div class="subtitle">Fictional market simulator</div>
+
+   <div class="statGrid">
+    <div class="stat"><div class="small">Cash Available</div><b id="invCash">₹0</b></div>
+    <div class="stat"><div class="small">Portfolio Value</div><b id="invValue">₹0</b></div>
+    <div class="stat"><div class="small">Total Invested</div><b id="invInvested">₹0</b></div>
+    <div class="stat"><div class="small">Unrealized P/L</div><b id="invUnrealized">₹0</b></div>
+    <div class="stat"><div class="small">Realized P/L</div><b id="invRealized">₹0</b></div>
+    <div class="stat"><div class="small">Net P/L</div><b id="invNet">₹0</b></div>
+   </div>
+
+   <div class="card" style="margin-top:13px">
+    <strong>Portfolio P/L Graph</strong>
+    <canvas id="portfolioChart" width="700" height="220"></canvas>
+   </div>
+
+   <div class="actionRow">
+    <button class="primary" onclick="refreshMarket()">Refresh Market</button>
+    <button class="secondary" onclick="showInvestmentInfo()">How it works</button>
+   </div>
+
+   <div id="assets"></div>
+  </section>
+
+  <!-- PREMIUM -->
+  <section id="premiumPage" class="page">
+   <h2>Premium View</h2>
+   <div class="subtitle">Extra simulator features</div>
+
+   <div class="card balanceCard center">
+    <div id="premiumRibbon" class="memberRibbon" style="display:none">✦ PREMIUM MEMBER</div>
+    <div style="font-size:44px">★</div>
+    <h2>Premium</h2>
+    <p>₹299 activation fee</p>
+    <p class="small">Simulator only — no real payment is processed.</p>
+    <button class="primary" onclick="activatePremium()" id="premiumBtn">Activate Premium · ₹299</button>
+    <p class="small" style="margin:10px 0 0">A one-time ₹299 activation fee is deducted from this simulator account's bank balance. Membership is separate for each registered email. No real-world payment or recurring charge is processed.</p>
+    <div id="premiumColorControls" class="field" style="display:none;text-align:left">
+     <label for="premiumColorSelect">Premium accent colour</label>
+     <select id="premiumColorSelect" onchange="changePremiumColor(this.value)">
+      <option value="gold">Royal Gold</option>
+      <option value="sapphire">Sapphire Blue</option>
+      <option value="emerald">Emerald Green</option>
+      <option value="violet">Royal Violet</option>
+      <option value="rose">Rose Pink</option>
+     </select>
+    </div>
+   </div>
+
+   <div class="card">
+    <h3>Included</h3>
+    <div class="listItem">Advanced investment view <span>✓</span></div>
+    <div class="listItem">Detailed transaction receipts <span>✓</span></div>
+    <div class="listItem">Extra simulator themes <span>✓</span></div>
+    <div class="listItem">Portfolio statistics <span>✓</span></div>
+   </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="historyPage" class="page">
+   <h2>Transaction History</h2>
+   <div class="subtitle">All simulated transactions</div>
+
+   <input class="field input search" id="historySearch" placeholder="Search transactions..." oninput="renderHistory()">
+
+   <select id="historyFilter" onchange="renderHistory()" style="width:100%;padding:13px;border-radius:11px;background:#101221;color:#fff;border:1px solid #333;margin-bottom:12px">
+    <option value="all">All</option>
+    <option value="credit">Money Received</option>
+    <option value="debit">Money Sent</option>
+    <option value="bill">Bills</option>
+    <option value="investment">Investments</option>
+   </select>
+
+   <button class="secondary" onclick="exportStatement()">Export Statement</button>
+
+   <div class="card" id="historyList"></div>
+  </section>
+
+  <!-- LOAN: added simulator features; other app sections remain unchanged -->
+  <section id="loanPage" class="page">
+   <div class="loanHead"><div><h2>Loans & Lending</h2><div class="subtitle">Explore offers, manage daily repayments and earn simulated interest</div></div><div class="loanMark">₹</div></div>
+   <div class="loanHero"><div><span class="loanEyebrow">SPECIAL LOAN OFFERS</span><h3>Make your next move possible</h3><p>Home • Car • Gold • Education • Personal & more</p><button class="loanGoldBtn" onclick="document.getElementById('loanOffers').scrollIntoView({behavior:'smooth'})">Explore Offers →</button></div><div class="loanHeroArt">🏡</div></div>
+   <div class="loanStats"><div class="loanStat"><span>Active loans</span><b id="loanActiveCount">0</b></div><div class="loanStat"><span>Daily repayment</span><b id="loanDailyTotal">₹0</b></div><div class="loanStat"><span>Earned lending interest</span><b id="loanInterestEarned">₹0</b></div></div>
+   <div class="loanSectionTitle" id="loanOffers"><div><h3>Loan Offers</h3><p>Choose from multiple simulated offers</p></div><span class="loanTag">Daily EMI ≤ ₹1,000</span></div>
+   <div class="loanFilters" id="loanFilters"><button class="active" onclick="filterLoanOffers('All',this)">All</button><button onclick="filterLoanOffers('Home',this)">Home</button><button onclick="filterLoanOffers('Car',this)">Car</button><button onclick="filterLoanOffers('Gold',this)">Gold</button><button onclick="filterLoanOffers('Personal',this)">Personal</button><button onclick="filterLoanOffers('Education',this)">Education</button><button onclick="filterLoanOffers('Business',this)">Business</button></div>
+   <div id="loanOfferList" class="loanOfferList"></div>
+   <div class="loanSectionTitle"><div><h3>Your Active Loans</h3><p>Daily installment tracking</p></div></div>
+   <div id="activeLoanList"></div>
+   <div class="loanLendHero"><div class="loanLendIcon">🤝</div><div><span class="loanEyebrow">BECOME A LENDER</span><h3>Lend money & earn daily interest</h3><p>Choose a demo lending plan and receive ₹30 or ₹40 interest per day.</p></div></div>
+   <div class="card loanLendCard"><div class="loanSectionTitle"><div><h3>Give a Loan</h3><p>Use your simulator balance to lend</p></div><span class="loanTag">Daily earnings</span></div><div class="loanField"><label for="lendAmount">Lend amount (₹)</label><input id="lendAmount" type="number" min="1000" step="500" value="5000"></div><div class="loanField"><label>Daily interest reward</label><div class="loanChoice"><button type="button" class="active" id="lend30" onclick="setLendReward(30)">₹30 / day</button><button type="button" id="lend40" onclick="setLendReward(40)">₹40 / day</button></div></div><div class="loanLendPreview"><span>Estimated interest over 30 days</span><b id="lendPreview">₹900</b></div><button class="loanGoldBtn full" onclick="startLending()">Lend Money Now →</button><p class="loanDisclaimer">Simulator only: lending, daily rewards and balances are fictional and do not represent a real financial offer.</p></div>
+   <div class="loanSectionTitle"><div><h3>My Lending</h3><p>Track your money and daily earnings</p></div></div><div id="myLendingList"></div>
+   <div class="loanReminderInfo">🔔 <div><b>Daily installment notifications</b><p>A reminder is added in the app each day an installment is due. If it is still unpaid the next day, a one-time 2% late charge is added to that installment. Open the app to refresh reminders and calculations.</p></div></div>
+   <p class="loanDisclaimer center">All loans, lenders, interest, payments and notifications in this section are simulated for educational use only. No real bank or person is involved.</p>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="profilePage" class="page">
+   <h2>Profile</h2>
+   <div class="subtitle">Account and settings</div>
+
+   <div class="card">
+    <div class="itemMain">
+     <div class="avatar" id="profileAvatar">M</div>
+     <div class="itemText">
+      <strong id="profileName"></strong>
+      <span id="profileEmail"></span>
+     </div>
+    </div>
+   </div>
+
+   <div class="card">
+    <div class="listItem"><span>Bank</span><b id="profileBank"></b></div>
+    <div class="listItem"><span>Account ID</span><b id="profileAccount"></b></div>
+    <div class="listItem"><span>UPI ID</span><b id="profileUpi"></b></div>
+    <div class="listItem"><span>Credit Score</span><b id="profileCredit"></b></div>
+   </div>
+
+   <div class="card">
+    <h3>Settings</h3>
+    <div class="field">
+     <label>Theme</label>
+     <select id="themeSelect" onchange="changeTheme(this.value)">
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+      <option value="system">System</option>
+     </select>
+    </div>
+
+    <div class="field">
+     <label>Text Size</label>
+     <select id="textSelect" onchange="changeTextSize(this.value)">
+      <option value="small">Small</option>
+      <option value="medium">Medium</option>
+      <option value="large">Large</option>
+     </select>
+    </div>
+
+    <button class="secondary" onclick="changeUpiPin()">Change UPI PIN</button>
+    <button class="secondary" onclick="showCards()">Cards</button>
+    <button class="secondary" onclick="showHelp()">Help & FAQ</button>
+    <button class="secondary" onclick="logout()">Logout</button>
+    <button class="secondary" style="color:#ff7777" onclick="clearAllData()">Clear All Local Data</button>
+   </div>
+  </section>
+
+ </main>
+
+ <nav class="bottom">
+  <button class="navBtn active" data-page="home"><b>⌂</b>Home</button>
+  <button class="navBtn" data-page="upi"><b>↔</b>UPI</button>
+  <button class="navBtn" data-page="payments"><b>▤</b>Payments</button>
+  <button class="navBtn" data-page="investments"><b>◉</b>Invest</button>
+  <button class="navBtn" data-page="loan"><b>💳</b>Loan</button>
+  <button class="navBtn" data-page="profile"><b>♙</b>Profile</button>
+ </nav>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+ <div class="modalBox">
+  <div class="modalHead">
+   <strong id="modalTitle">Details</strong>
+   <button class="close" onclick="closeModal()">×</button>
+  </div>
+  <div id="modalContent"></div>
+ </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* =========================================================
+   MY BANK SIMULATOR
+   ROBUST BOOT + LOCAL STORAGE
+   ========================================================= */
+
+var KEY="myBankSimulator_final_1";
+var state={users:[],session:null};
+var marketAssets=[
+ {symbol:"GOLD",name:"Digital Gold",base:6500,vol:2.5,up:55},
+ {symbol:"NOVA",name:"Nova Technologies",base:420,vol:4.0,up:54},
+ {symbol:"APEX",name:"Apex Motors",base:310,vol:3.5,up:51},
+ {symbol:"GREEN",name:"Green Energy Co.",base:275,vol:4.5,up:57},
+ {symbol:"ORBIT",name:"Orbit Systems",base:520,vol:3.8,up:53},
+ {symbol:"QUANT",name:"Quant Labs",base:730,vol:5.0,up:50}
+];
+
+var splash=document.getElementById("splash");
+var auth=document.getElementById("auth");
+var app=document.getElementById("app");
+
+function safeGet(){
+ try{return localStorage.getItem(KEY)}catch(e){return null}
+}
+function safeSet(){
+ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+}
+function loadState(){
+ try{
+  var raw=safeGet();
+  if(raw){
+   var x=JSON.parse(raw);
+   if(x && typeof x==="object") state=x;
+  }
+ }catch(e){
+  state={users:[],session:null};
+ }
+ if(!Array.isArray(state.users))state.users=[];
+}
+
+function uid(prefix){
+ return prefix+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
+}
+
+function money(n){
+ n=Number(n)||0;
+ return "₹"+n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function currentUser(){
+ for(var i=0;i<state.users.length;i++){
+  if(state.users[i].id===state.session)return state.users[i];
+ }
+ return null;
+}
+
+function normalizeUser(u){
+ if(!u.investments)u.investments={};
+ if(!u.market)u.market={};
+ if(!Array.isArray(u.transactions))u.transactions=[];
+ if(!Array.isArray(u.portfolioHistory))u.portfolioHistory=[];
+ if(!Array.isArray(u.notifications))u.notifications=[];
+ if(!Array.isArray(u.requests))u.requests=[];
+ if(!Array.isArray(u.recentPayees))u.recentPayees=[];
+ if(!Array.isArray(u.cards))u.cards=[];
+ if(!Array.isArray(u.demoLoans))u.demoLoans=[];
+ if(!Array.isArray(u.demoLendings))u.demoLendings=[];
+ if(!u.dailyUtilityBills)u.dailyUtilityBills={lastReminder:"",paidToday:{}};
+ if(u.lendReward!==30)u.lendReward=Number(u.lendReward)===40?40:30;
+
+ if(u.bankBalance===undefined)u.bankBalance=Number(u.balance)||25000;
+ if(u.walletBalance===undefined)u.walletBalance=0;
+ if(u.creditScore===undefined)u.creditScore=720;
+ if(u.premium===undefined)u.premium=false;
+
+ if(!u.settings)u.settings={};
+ if(!u.settings.theme)u.settings.theme="dark";
+ if(!u.settings.premiumColor)u.settings.premiumColor="gold";
+ if(!u.settings.textSize)u.settings.textSize="medium";
+ if(!u.settings.upiPin)u.settings.upiPin="1234";
+ if(u.settings.notifications===undefined)u.settings.notifications=true;
+
+ if(!u.accountNumber)u.accountNumber="MB"+Math.floor(1000000000+Math.random()*8999999999);
+ if(!u.upi)u.upi=(u.email||"user").split("@")[0].replace(/[^a-zA-Z0-9]/g,"").toLowerCase()+Math.floor(100+Math.random()*900)+"@mybank";
+ if(!u.virtualPaymentId)u.virtualPaymentId=uid("VP");
+
+ for(var i=0;i<marketAssets.length;i++){
+  var a=marketAssets[i];
+  if(!u.investments[a.symbol]){
+   u.investments[a.symbol]={units:0,avgPrice:0,invested:0,realizedPL:0};
+  }
+  if(!u.market[a.symbol]){
+   u.market[a.symbol]={
+    price:a.base,
+    lastChange:0,
+    history:[a.base],
+    updated:Date.now()
+   };
+  }
+ }
+ return u;
+}
+
+function save(){
+ for(var i=0;i<state.users.length;i++)normalizeUser(state.users[i]);
+ safeSet();
+ renderNotificationBadge();
+}
+
+var splashStartedAt=Date.now();
+var splashHideScheduled=false;
+function hideSplash(){
+ if(!splash||splashHideScheduled)return;
+ splashHideScheduled=true;
+ // Let the complete opening animation play before revealing the existing app.
+ var wait=Math.max(0,3400-(Date.now()-splashStartedAt));
+ setTimeout(function(){
+  splash.classList.add("splash-exit");
+  setTimeout(function(){splash.style.display="none";},700);
+ },wait);
+}
+
+function showAuth(){
+ auth.style.display="flex";
+ app.classList.remove("ready");
+ app.style.display="none";
+}
+
+function showApp(){
+ auth.style.display="none";
+ app.style.display="block";
+ app.classList.add("ready");
+}
+
+function boot(){
+ try{
+  loadState();
+
+  for(var i=0;i<state.users.length;i++)normalizeUser(state.users[i]);
+  save();
+
+  hideSplash();
+
+  if(state.session && currentUser()){
+   showApp();
+   applySettings();
+   renderAll();
+   scheduleDailyUtilityBillReminders();
+  }else{
+   state.session=null;
+   save();
+   showAuth();
+  }
+ }catch(e){
+  state={users:[],session:null};
+  hideSplash();
+  showAuth();
+ }
+}
+
+/* EXTRA FALLBACKS */
+setTimeout(hideSplash,2200);
+setTimeout(function(){
+ hideSplash();
+ if(!state.session)showAuth();
+},3500);
+
+window.onerror=function(){
+ hideSplash();
+ if(!state.session)showAuth();
+ return false;
+};
+
+function switchAuth(type){
+ var lf=document.getElementById("loginForm");
+ var rf=document.getElementById("registerForm");
+ document.getElementById("loginTab").className=type==="login"?"active":"";
+ document.getElementById("registerTab").className=type==="register"?"active":"";
+ lf.className=type==="login"?"":"hidden";
+ rf.className=type==="register"?"":"hidden";
+}
+
+function register(){
+ var name=document.getElementById("regName").value.trim();
+ var email=document.getElementById("regEmail").value.trim().toLowerCase();
+ var password=document.getElementById("regPassword").value;
+ var bank=document.getElementById("regBank").value;
+ var accountNumber=document.getElementById("regAccount").value.trim();
+
+ if(!name||!email||!password||!accountNumber||!bank){
+  toast("Please fill all fields and choose a bank.");return;
+ }
+ if(!/^[A-Za-z0-9-]{6,24}$/.test(accountNumber)){
+  toast("Enter a demo account number (6–24 letters/numbers).");return;
+ }
+ if(password.length<4){
+  toast("Password must contain at least 4 characters.");return;
+ }
+ if(state.users.length>=100){
+  toast("Maximum 100 users reached.");return;
+ }
+ for(var i=0;i<state.users.length;i++){
+  if(state.users[i].email===email){
+   toast("An account with this email already exists.");return;
+  }
+  if(String(state.users[i].accountNumber||"").toLowerCase()===accountNumber.toLowerCase()){
+   toast("That account number is already registered.");return;
+  }
+ }
+
+ var base=email.split("@")[0].replace(/[^a-z0-9]/gi,"").toLowerCase()||"user";
+ var upi=base+Math.floor(100+Math.random()*900)+"@mybank";
+
+ var u={
+  id:uid("U"),
+  name:name,
+  email:email,
+  password:password,
+  bank:bank,
+  accountNumber:accountNumber,
+  upi:upi,
+  virtualPaymentId:uid("VP"),
+  bankBalance:25000,
+  walletBalance:0,
+  creditScore:720,
+  transactions:[],
+  investments:{},
+  market:{},
+  portfolioHistory:[],
+  notifications:[],
+  requests:[],
+  recentPayees:[],
+  cards:[],
+  premium:false,
+  settings:{
+   theme:"dark",
+   textSize:"medium",
+   upiPin:"1234",
+   notifications:true
+  }
+ };
+
+ normalizeUser(u);
+ state.users.push(u);
+ state.session=u.id;
+ save();
+ showApp();
+ applySettings();
+ renderAll();
+ scheduleDailyUtilityBillReminders();
+ toast("Account created successfully.");
+}
+
+function login(){
+ var email=document.getElementById("loginEmail").value.trim().toLowerCase();
+ var accountNumber=document.getElementById("loginAccount").value.trim().toLowerCase();
+ var password=document.getElementById("loginPassword").value;
+
+ for(var i=0;i<state.users.length;i++){
+  if(state.users[i].email===email && String(state.users[i].accountNumber||"").toLowerCase()===accountNumber && state.users[i].password===password){
+   state.session=state.users[i].id;
+   normalizeUser(state.users[i]);
+   save();
+   showApp();
+   applySettings();
+   renderAll();
+   scheduleDailyUtilityBillReminders();
+   toast("Login successful.");
+   return;
+  }
+ }
+ toast("Incorrect email, account number or password.");
+}
+
+function logout(){
+ state.session=null;
+ save();
+ app.style.display="none";
+ app.classList.remove("ready");
+ showAuth();
+ switchAuth("login");
+ toast("Logged out.");
+}
+
+/* NAVIGATION */
+var pageTitles={
+ home:"Home",upi:"UPI",payments:"Payments",
+ investments:"Investments",premium:"Premium",loan:"Loans",
+ history:"History",profile:"Profile"
+};
+
+function showPage(name){
+ var pages=document.querySelectorAll(".page");
+ for(var i=0;i<pages.length;i++)pages[i].classList.remove("active");
+
+ var target=document.getElementById(name+"Page");
+ if(target)target.classList.add("active");
+
+ var nav=document.querySelectorAll(".navBtn");
+ for(var j=0;j<nav.length;j++){
+  nav[j].classList.toggle("active",nav[j].getAttribute("data-page")===name);
+ }
+
+ document.getElementById("topTitle").textContent=pageTitles[name]||name;
+
+ if(name==="home")renderHome();
+ if(name==="upi")renderUPI();
+ if(name==="payments"){renderDailyUtilityBills();}
+ if(name==="investments")renderInvestments();
+ if(name==="history")renderHistory();
+ if(name==="loan"){renderLoan();checkLoanReminders();}
+ if(name==="profile")renderProfile();
+}
+
+document.addEventListener("click",function(e){
+ var b=e.target.closest(".navBtn");
+ if(b)showPage(b.getAttribute("data-page"));
+});
+
+/* HOME */
+function renderHome(){
+ var u=currentUser();if(!u)return;
+ document.getElementById("hello").textContent="Hello, "+u.name;
+ document.getElementById("homeBank").textContent=money(u.bankBalance);
+ document.getElementById("homeWallet").textContent=money(u.walletBalance);
+
+ var iv=portfolioValue(u);
+ document.getElementById("homeInvest").textContent=money(iv);
+ document.getElementById("homeNet").textContent=money(u.bankBalance+u.walletBalance+iv);
+
+ var box=document.getElementById("homeTransactions");
+ var arr=u.transactions.slice().reverse().slice(0,5);
+ if(!arr.length){
+  box.innerHTML='<p class="small center">No transactions yet.</p>';return;
+ }
+ box.innerHTML="";
+ for(var i=0;i<arr.length;i++)box.innerHTML+=txHTML(arr[i]);
+}
+
+function txHTML(t){
+ var positive=t.type==="credit";
+ return '<div class="listItem">'+
+ '<div class="itemMain"><div class="avatar">'+(positive?"+":"−")+'</div>'+
+ '<div class="itemText"><strong>'+escapeHTML(t.title||"Transaction")+'</strong>'+
+ '<span>'+escapeHTML(t.date||"")+'</span></div></div>'+
+ '<div class="'+(positive?"green":"red")+'">'+(positive?"+":"−")+money(Math.abs(t.amount))+'</div></div>';
+}
+
+/* UPI */
+function renderUPI(){
+ var u=currentUser();if(!u)return;
+ document.getElementById("myUpi").textContent=u.upi;
+ createQR(u.upi);
+}
+
+function createQR(text){
+ var q=document.getElementById("qr");if(!q)return;
+ q.innerHTML="";
+ var seed=0;
+ for(var i=0;i<text.length;i++)seed=(seed*31+text.charCodeAt(i))%999999;
+
+ for(var n=0;n<225;n++){
+  var x=(seed+n*7919)%100;
+  var cell=document.createElement("div");
+  cell.style.background=x<52?"#000":"#fff";
+  q.appendChild(cell);
+ }
+}
+
+function openSend(){
+ showPage("upi");
+ setTimeout(function(){
+  document.getElementById("sendTo").focus();
+ },100);
+}
+
+function startSend(){
+ var to=document.getElementById("sendTo").value.trim();
+ var amount=Number(document.getElementById("sendAmount").value);
+ var note=document.getElementById("sendNote").value.trim();
+ var u=currentUser();
+
+ if(!to){toast("Enter a UPI ID or Account ID.");return}
+ if(!amount||amount<=0){toast("Enter a valid amount.");return}
+ if(amount>u.bankBalance){toast("Insufficient bank balance.");return}
+
+ var receiver=findUser(to);
+ var receiverName=receiver?receiver.name:"External simulator recipient";
+
+ showModal("Confirm Payment",
+ '<div class="card">'+
+ '<div class="small">Receiver</div><h3>'+escapeHTML(receiverName)+'</h3>'+
+ '<div class="small">UPI / Account ID</div><p>'+escapeHTML(to)+'</p>'+
+ '<div class="small">Amount</div><div class="amount">'+money(amount)+'</div>'+
+ '<div class="small">Note</div><p>'+escapeHTML(note||"No note")+'</p></div>'+
+ '<button class="primary" onclick="confirmSend(\''+escapeAttr(to)+'\','+amount+',\''+escapeAttr(note)+'\')">Confirm Payment</button>'
+ );
+}
+
+function findUser(id){
+ id=String(id||"").trim().toLowerCase();
+ for(var i=0;i<state.users.length;i++){
+  var u=state.users[i];
+  if((u.upi||"").trim().toLowerCase()===id ||
+     (u.accountNumber||"").trim().toLowerCase()===id ||
+     (u.email||"").trim().toLowerCase()===id)return u;
+ }
+ return null;
+}
+
+function confirmSend(to,amount,note){
+ var u=currentUser();
+ if(amount>u.bankBalance){
+  closeModal();toast("Insufficient balance.");return;
+ }
+
+ showProcessing();
+
+ setTimeout(function(){
+  var fail=Math.random()<0.15;
+
+  if(fail){
+   closeModal();
+   showPaymentResult(false,{
+    amount:amount,to:to,note:note,
+    message:"Payment failed. No money was deducted."
+   });
+   return;
+  }
+
+  u.bankBalance-=amount;
+
+  var receiver=findUser(to);
+
+  var tx={
+   id:uid("TX"),
+   type:"debit",
+   title:"UPI Payment",
+   amount:amount,
+   to:to,
+   note:note,
+   status:"Success",
+   date:new Date().toLocaleString()
+  };
+
+  u.transactions.push(tx);
+
+  if(receiver && receiver.id!==u.id){
+   receiver.bankBalance+=amount;
+   receiver.transactions.push({
+    id:uid("TX"),
+    type:"credit",
+    title:"Money Received",
+    amount:amount,
+    from:u.upi,
+    note:note,
+    status:"Success",
+    date:new Date().toLocaleString()
+   });
+   receiver.notifications.push({
+    text:"You received "+money(amount)+" from "+u.name,
+    date:new Date().toLocaleString(),
+    read:false
+   });
+  }
+
+  save();
+  closeModal();
+  renderAll();
+
+  showPaymentResult(true,{
+   amount:amount,
+   to:to,
+   note:note,
+   txn:tx.id,
+   receiver:receiver?receiver.name:"External simulator recipient"
+  });
+ },1200+Math.random()*3300);
+}
+
+function showProcessing(){
+ showModal("Processing Payment",
+ '<div class="center" style="padding:30px">'+
+ '<div class="logo" style="width:80px;height:80px;margin:auto"><svg class="premiumMark" viewBox="0 0 100 100" role="img" aria-label="Bank Simulator premium emblem"><defs><linearGradient id="markGold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b7"/><stop offset=".48" stop-color="#d8ad55"/><stop offset="1" stop-color="#8f642d"/></linearGradient></defs><path d="M50 5 88 25v39L50 95 12 64V25Z" fill="#151b2c" stroke="url(#markGold)" stroke-width="3"/><path d="M50 18 76 31v28L50 81 24 59V31Z" fill="#26344b" stroke="#e7c777" stroke-width="1.5"/><path d="M29 43 50 31l21 12M34 47h32M38 48v17m12-17v17m12-17v17M31 68h38" fill="none" stroke="url(#markGold)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="m74 17 2.8 6 6.2 2.8-6.2 2.7-2.8 6.2-2.7-6.2-6.2-2.7 6.2-2.8Z" fill="#fff0b7"/></svg></div>'+ 
+ '<h3>Processing...</h3><p class="small">Please wait.</p></div>'
+ );
+}
+
+/* PAYMENT RESULT */
+function showPaymentResult(success,data){
+ playSound(success);
+
+ showModal(
+  success?"Payment Complete":"Payment Failed",
+  '<div class="center">'+
+  '<div class="resultIcon '+(success?"successIcon":"failIcon")+'">'+(success?"✓":"×")+'</div>'+
+  '<h2>'+(success?"Payment Complete":"Payment Failed")+'</h2>'+
+  '<div class="amount">'+money(data.amount)+'</div>'+
+  '<p class="small">'+escapeHTML(data.message||"Transaction processed by the simulator.")+'</p>'+
+  '</div>'+
+  '<div class="card">'+
+  '<div class="listItem"><span>Status</span><b class="'+(success?"green":"red")+'">'+(success?"Success":"Failed")+'</b></div>'+
+  '<div class="listItem"><span>Recipient</span><b>'+escapeHTML(data.receiver||data.to)+'</b></div>'+
+  '<div class="listItem"><span>ID</span><b>'+escapeHTML(data.to)+'</b></div>'+
+  (data.txn?'<div class="listItem"><span>Transaction ID</span><b>'+escapeHTML(data.txn)+'</b></div>':"")+
+  '<div class="listItem"><span>Date</span><b>'+new Date().toLocaleString()+'</b></div>'+
+  '<div class="listItem"><span>Note</span><b>'+escapeHTML(data.note||"None")+'</b></div>'+
+  '</div>'+
+  '<div class="actionRow">'+
+  '<button class="primary" onclick="closeModal()">Done</button>'+
+  '<button class="secondary" onclick="showPage(\'history\');closeModal()">View History</button>'+
+  '<button class="secondary" onclick="copyReceipt()">Copy Receipt</button>'+
+  '<button class="secondary" onclick="window.print()">Print</button>'+
+  '</div>'
+ );
+ window.lastReceipt={
+  success:success,
+  amount:data.amount,
+  to:data.to,
+  txn:data.txn||"",
+  note:data.note||"",
+  date:new Date().toLocaleString()
+ };
+}
+
+function copyReceipt(){
+ var r=window.lastReceipt;
+ if(!r)return;
+ var text=
+ "MY BANK SIMULATOR RECEIPT\n"+
+ "Status: "+(r.success?"Success":"Failed")+"\n"+
+ "Amount: "+money(r.amount)+"\n"+
+ "Recipient: "+r.to+"\n"+
+ "Transaction ID: "+r.txn+"\n"+
+ "Date: "+r.date+"\n"+
+ "Note: "+(r.note||"None");
+ copyText(text);
+}
+
+/* ADD MONEY */
+function openAddMoney(){
+ showModal("Add Money",
+ '<div class="field"><label>Amount from bank to wallet</label><input id="addAmount" type="number" placeholder="₹ Amount"></div>'+
+ '<p class="small">This moves money from your simulated bank balance to your simulated wallet. It does not create free money.</p>'+
+ '<button class="primary" onclick="addMoney()">Move to Wallet</button>'
+ );
+}
+
+function addMoney(){
+ var u=currentUser();
+ var n=Number(document.getElementById("addAmount").value);
+ if(!n||n<=0){toast("Enter a valid amount.");return}
+ if(n>u.bankBalance){toast("Insufficient bank balance.");return}
+
+ u.bankBalance-=n;
+ u.walletBalance+=n;
+ u.transactions.push({
+  id:uid("TX"),type:"credit",title:"Wallet Added",
+  amount:n,date:new Date().toLocaleString(),status:"Success"
+ });
+ save();closeModal();renderAll();toast(money(n)+" moved to wallet.");
+}
+
+/* REQUEST */
+function openRequest(){
+ showModal("Request Money",
+ '<div class="field"><label>UPI ID / Account ID</label><input id="requestTo" placeholder="person@mybank"></div>'+
+ '<div class="field"><label>Amount</label><input id="requestAmount" type="number" placeholder="₹ Amount"></div>'+
+ '<div class="field"><label>Note</label><input id="requestNote" placeholder="Why are you requesting?"></div>'+
+ '<button class="primary" onclick="sendRequest()">Send Request</button>'
+ );
+}
+
+function sendRequest(){
+ var u=currentUser();
+ var to=document.getElementById("requestTo").value.trim();
+ var amount=Number(document.getElementById("requestAmount").value);
+ var note=document.getElementById("requestNote").value.trim();
+ var r=findUser(to);
+
+ if(!r){toast("Only users in this simulator can accept a money request.");return}
+ if(r.id===u.id){toast("You cannot request money from yourself.");return}
+ if(!amount||amount<=0){toast("Enter a valid amount.");return}
+
+ r.requests.push({
+  id:uid("RQ"),
+  from:u.id,
+  fromName:u.name,
+  fromUpi:u.upi,
+  amount:amount,
+  note:note,
+  status:"pending",
+  date:new Date().toLocaleString()
+ });
+ r.notifications.push({
+  text:u.name+" requested "+money(amount),
+  date:new Date().toLocaleString(),
+  read:false
+ });
+ save();closeModal();toast("Money request sent.");
+}
+
+/* SCAN */
+function openScan(){
+ showModal("Scan & Pay",
+ '<p class="small">Camera scanning is not required for this simulator. Enter the payment ID manually.</p>'+
+ '<div class="field"><label>Simulated scanned UPI ID</label><input id="scanId" placeholder="person@mybank"></div>'+
+ '<button class="primary" onclick="useScan()">Use ID</button>'
+ );
+}
+
+function useScan(){
+ var id=document.getElementById("scanId").value.trim();
+ if(!id){toast("Enter a UPI ID.");return}
+ closeModal();
+ document.getElementById("sendTo").value=id;
+ showPage("upi");
+ document.getElementById("sendTo").focus();
+}
+
+/* BILLS — operator and DTH catalogues are local simulator data */
+var rechargeCatalog={
+ Jio:{logo:'JIO',kind:'jio',data:[
+  [19,'1 GB data','Validity not stated','Data only','Plan validity unclear'],[29,'2 GB data','Validity not stated','Data only','Plan validity unclear'],[69,'6 GB data','Validity not stated','Data only','Plan validity unclear'],[175,'10 GB + OTT','28 days','No calling','OTT benefit listed in supplied plan'],
+  [199,'Plan details to verify','Check operator app','Calling/SMS not supplied','Price included as requested; details not supplied'],[249,'Plan details to verify','Check operator app','Calling/SMS not supplied','Price included as requested; details not supplied'],[299,'Plan details to verify','Check operator app','Calling/SMS not supplied','Price included as requested; details not supplied'],[349,'Plan details to verify','Check operator app','Calling/SMS not supplied','Price included as requested; details not supplied'],[399,'Plan details to verify','Check operator app','Calling/SMS not supplied','Price included as requested; details not supplied'],[499,'Plan details to verify','Check operator app','Calling/SMS not supplied','Price included as requested; details not supplied']
+ ],plans:[
+  [100,'5 GB + JioHotstar','90 days','No calling','As supplied'],[200,'OTT Pass: 15 OTT apps, JioTV 1,000+ channels, 30 GB','28 days','Needs an active base plan','As supplied'],[749,'2 GB/day + OTT','72 days','Calling/SMS not specified','As supplied'],[949,'JioHotstar','84 days','Calling/SMS not specified','As supplied'],[3599,'2.5 GB/day + Gemini Pro','365 days','Calling/SMS not specified','As supplied'],[10000,'2.5 GB/day + OTT','3 years','Calling/SMS not specified','As supplied']
+ ]},
+ Airtel:{logo:'airtel',kind:'airtel',data:[[19,'1 GB','1 day','Data only','†'],[29,'2 GB','1 day','Data only','†']],plans:[
+  [100,'5 GB + JioHotstar','30 days','No calling','As supplied; verify OTT eligibility'],[279,'25+ OTT via Xstream Play Premium + 5G','Check operator app','Benefits as listed','Validity not supplied'],[449,'3 GB/day + 22+ OTT','Check operator app','Unlimited calls','Validity/SMS not supplied'],[598,'5G + 25+ OTT','1 month','Unlimited calls','Daily data not supplied'],[838,'3 GB/day + Prime','56 days','Unlimited calls','As supplied'],[979,'2 GB/day + OTT','84 days','Unlimited calls + 100 SMS/day','As supplied'],[1199,'2.5 GB/day + Prime','84 days','Unlimited calls','As supplied'],[1729,'Netflix Basic + JioHotstar + ZEE5 + 25+ OTT','84 days','Calling/SMS not supplied','As supplied'],[1999,'24 GB total','365 days','Unlimited calls + 100 SMS/day','†'],[3599,'2 GB/day','365 days','Unlimited calls + 100 SMS/day','†']
+ ]},
+ Vi:{logo:'Vi',kind:'vi',data:[[22,'1 GB','1 day','Data only','†'],[48,'6 GB','3 days','Data only','†']],plans:[
+  [95,'SonyLIV Mobile pack','Check operator app','OTT pack','Validity not confirmed'],[199,'2 GB total','28 days','Unlimited calls + 100 SMS/day','†'],[269,'1 GB/day','28 days','Unlimited calls + 100 SMS/day','†'],[359,'3 GB/day','28 days','Unlimited calls + 100 SMS/day','†'],[409,'2.5 GB/day + Netflix','Not confirmed','Unlimited calls + 100 SMS/day','Validity not confirmed'],[509,'6 GB total','84 days','Unlimited calls + 100 SMS/day','†'],[579,'1.5 GB/day','56 days','Unlimited calls + 100 SMS/day','†'],[859,'1.5 GB/day','84 days','Unlimited calls + 100 SMS/day','†'],[1599,'Netflix Basic','84 days','Calling/SMS not supplied','†'],[1999,'24 GB total','365 days','Unlimited calls + 100 SMS/day','†'],[3599,'2 GB/day','365 days','Unlimited calls + 100 SMS/day','†']
+ ]},
+ BSNL:{logo:'BSNL',kind:'bsnl',data:[],plans:[
+  [197,'5 GB data','35 days','Calling/SMS not supplied','As supplied'],[199,'2 GB/day','28 days','Unlimited calls + 100 SMS/day','As supplied'],[265,'1 GB/day','28 days','Unlimited calls + 100 SMS/day','†'],[299,'Daily data','30 days','Unlimited calls + 100 SMS/day','Daily data quota not specified'],[347,'2 GB/day','56 days','Unlimited calls + 100 SMS/day','†'],[599,'3 GB/day','84 days','Unlimited calls + 100 SMS/day','†'],[1999,'600 GB total','365 days','Unlimited calls + 100 SMS/day','†'],[2399,'2 GB/day','365 days','Unlimited calls + 100 SMS/day','Offer note supplied for Aug 12–Sep 12, 2026; date window has passed'],[2626,'2.6 GB/day','365 days','Unlimited calls','SMS not supplied'],[2799,'3 GB/day','365 days','Unlimited calls + 100 SMS/day','As supplied']
+ ]}
+};
+var dthCatalog={
+ 'Tata Play':[
+  [48.60,'Hindi Bachat','30 days','38 channels','Cheapest listed'],[60,'Seniors add-on','30 days','Add-on'],[99,'Hindi Movies add-on','30 days','About 11 channels','†'],[154,'Hindi Super Value','30 days','48 channels'],[154,'Gujarati Hindi Super Value','30 days','53 channels'],[215,'Hindi Dhamaal','30 days','83–88 channels','Listed range Rs 157–215'],[215,'Marathi Hindi Dhamaal','30 days','93 channels'],[219,'Bangla Hindi Dhamaal','30 days','84 channels'],[225,'Odia Hindi Dhamaal','30 days','84 channels'],[225,'Marathi Hindi Super Value HD','30 days','57 channels'],[330,'Gujarati Hindi Dhamaal HD','30 days','88 channels'],[335,'Marathi Hindi Dhamaal HD','30 days','91 channels'],[349,'Bangla Hindi Dhamaal HD','30 days','84 channels'],[354,'Hindi Dhamaal Plus HD','30 days','69 channels'],[1062,'Hindi Dhamaal Plus HD','90 days','Pack'],[2124,'Hindi Dhamaal Plus HD','180 days','Pack'],[469,'140-channel pack','30 days','140 channels, 56 HD'],[529,'Hindi Mega Pack SD','30 days','127 channels','†'],[669,'Hindi Mega Pack HD','30 days','137 channels','†'],[669,'English Mega Pack HD','30 days','113 channels','†'],[199,'Netflix Basic Combo','30 days','TV + Netflix'],[133.96,'Kannada Super Value','30 days','26 channels','†'],[169.92,'Tamil Basic','30 days','63 channels','†'],[176.59,'Tamil Thalaiva HD','30 days','58 channels','†'],[187.04,'Telugu Super Value HD','30 days','Channels not supplied','†']
+ ],
+ 'Airtel Digital TV':[
+  [205,'New Orissa SD','30 days','44 channels'],[247,'Hindi Value Lite SD','30 days','74 channels'],[259,'Hindi Basic HD','30 days','Channels not supplied'],[259,'Hindi Value Lite SD (ZEE-TV18)','30 days','84 channels'],[279,'Hindi Entertainment','30 days','Channels not supplied'],[280,'TN Value Lite SD','30 days','85 channels'],[280,'New Karnataka SD Plus','30 days','70 channels'],[292,'Gujarat Value Lite HD','30 days','72 channels'],[292,'Karnataka Value Lite SD','30 days','84 channels'],[297,'Hindi Value Lite HD (ZEE-TV18)','30 days','85 channels'],[360,'Hindi Value Sports SD','30 days','121 channels'],[490,'Hindi Value Sports Lite HD','30 days','122 channels'],[410,'Mega Pack','30 days','175 channels','†'],[580,'Magnum','30 days','180 channels','†'],[799,'Ultimate Dhamaka SD','180 days','Pack','†'],[1549,'Hindi Entertainment Value','180 days','Pack'],[1681,'Hindi Value SD','195 days','6 months + 15 days free'],[3081,'Hindi Value SD','360 days','Pack'],[3599,'Hindi Mega HD','180 days','164 channels'],[3048,'Value Sports Pack','365 days','110+ SD channels'],[7188,'Mega HD Pack','365 days','200+ SD and HD channels']
+ ],
+ 'Dish TV':[
+  [122,'Hindi Premium','30 days','Channels not supplied','†'],[145,'Super Family HSM','30 days','51 channels','†'],[158,'Family Saver Gujarati','30 days','36 channels'],[164,'Family Delight Kannada SD','30 days','47 channels'],[196,'Super Royal Sports Kids HSM','30 days','74 channels'],[209,'Kondattam Sports Malayalam SD','30 days','56 channels'],[222,'Family Saver Odia HD','30 days','40 channels'],[250,'New Super Family','30 days','265+ channels','†'],[262,'Family Delight Malayalam HD','30 days','Channels not supplied'],[276,'Super Family Marathi HD','30 days','58 channels'],[290,'Super Family Bangla HD','30 days','60 channels'],[273,'Titanium HSM','30 days','Channels not supplied','†'],[7176,'Family Entertainment HD','730 days','24 months','†']
+ ],
+ 'd2h':[
+  [84.75,'Value Combo','30 days','200 channels; 1-year lock-in','†'],[87.15,'Hamara Odia Lite','30 days','28 channels'],[141,'Hamara Hindi Pack','30 days','69 channels'],[147,'Value Lite Malayalam','30 days','47 channels'],[178,'Value Lite Bangla','30 days','63 channels'],[245,'Value Lite Hindi HD','30 days','Channels not supplied'],[286,'Value Gujarati HD','30 days','78 channels'],[586,'Platinum HD Combo','30 days','Channels not supplied','†']
+ ],
+ 'Sun Direct':[[190,'Starting price','30 days','Pack details vary','Approximate price'],[240,'Value Plus','30 days','147+ channels','†']]
+};
+var billUiState={type:'',provider:'',tab:'plans',selected:null};
+function brandBadge(label,kind){return '<div class="brandLogo '+(kind||'')+'">'+escapeHTML(label)+'</div>'}
+function openBill(type){
+ billUiState={type:type,provider:'',tab:'plans',selected:null};
+ if(type==='Mobile Recharge'){renderMobileBill();return}
+ if(type==='DTH Recharge'){renderDthBill();return}
+ var providers={
+  'Electricity':['APDCL','Assam Power Distribution Company','Other electricity provider'],
+  'Water':['PHED Assam','Municipal water board','Other water provider'],
+  'Gas':['Indane','Bharatgas','HP Gas','Other gas provider'],
+  'Broadband':['Airtel Xstream Fiber','JioFiber','BSNL Bharat Fiber','Local broadband provider'],
+  'FASTag':['ICICI FASTag','HDFC FASTag','SBI FASTag','Other FASTag provider'],
+  'Education Fee':['School / College','Coaching institute','Other institution'],
+  'Insurance':['LIC','New India Assurance','Other insurer'],
+  'Other Bill':['Other biller']
+ };
+ var opts=providers[type]||['Other provider'];
+ var html='<div class="paymentIntro">Select the service provider, enter the reference printed on your bill and enter the payable amount. This is a local simulator; no real bill is paid.</div>'+
+ '<div class="paymentSectionTitle">Choose provider <small>'+opts.length+' options</small></div>'+ 
+ '<div class="paymentFields"><div class="field"><label>Service provider</label><select id="utilityProvider">'+opts.map(function(x){return '<option>'+escapeHTML(x)+'</option>'}).join('')+'</select></div>'+ 
+ '<div class="field"><label>Consumer / customer / policy number</label><input id="billTarget" placeholder="Enter the number printed on your bill"></div>'+ 
+ '<div class="field"><label>Bill amount (₹)</label><input id="billAmount" type="number" min="1" placeholder="Enter amount"></div></div>'+ 
+ '<button class="primary" onclick="payBill(\''+escapeAttr(type)+'\')">Continue to payment</button>';
+ showModal(type,html);
+}
+function renderMobileBill(){
+ var names={Jio:'Digital services · 4G / 5G',Airtel:'Telecom · 4G / 5G',Vi:'Vodafone Idea · 4G',BSNL:'Bharat Sanchar Nigam'};
+ var html='<div class="paymentIntro">Choose your SIM operator first. Then enter the 10-digit mobile number and select a recharge pack. Plan details are catalogue references and may change by circle.</div>'+
+ '<div class="paymentSectionTitle">Select SIM operator <small>4 operators</small></div>'+ 
+ '<div class="providerGrid">'+['Jio','Airtel','Vi','BSNL'].map(function(p){var c=rechargeCatalog[p];return '<button type="button" class="providerChoice '+(billUiState.provider===p?'active':'')+'" onclick="chooseMobileProvider(\''+p+'\')">'+brandBadge(c.logo,c.kind)+'<span class="providerWords"><strong>'+p+'</strong><small>'+names[p]+'</small></span></button>'}).join('')+'</div>';
+ if(billUiState.provider){
+  html+='<div class="paymentFields"><div class="field"><label>'+billUiState.provider+' mobile number</label><input id="billTarget" inputmode="numeric" maxlength="10" placeholder="Enter 10-digit mobile number"></div></div>'+ 
+  '<div class="paymentSectionTitle">Choose a recharge category <small>Tap a pack to select</small></div>'+ 
+  '<div class="planTabs"><button class="'+(billUiState.tab==='data'?'active':'')+'" onclick="setMobileTab(\'data\')">Data add-ons</button><button class="'+(billUiState.tab==='plans'?'active':'')+'" onclick="setMobileTab(\'plans\')">Recharge plans</button></div>'+ 
+  '<div class="planList">'+renderPlanCards(rechargeCatalog[billUiState.provider][billUiState.tab],billUiState.selected,'mobile')+'</div>'+ 
+  '<p class="planNote">† means an older, single-source or uncertain listing. Prices and benefits can vary by circle. Verify in the operator’s official app before making a real recharge.</p>'+ 
+  (billUiState.selected!==null?'<div class="paymentContinue"><button class="primary" onclick="paySelectedPlan(\'Mobile Recharge\')">Continue · ₹'+billUiState.selected+'</button></div>':'');
+ }
+ showModal('Mobile Recharge',html);
+}
+function chooseMobileProvider(p){billUiState.provider=p;billUiState.selected=null;renderMobileBill()}
+function setMobileTab(t){billUiState.tab=t;billUiState.selected=null;renderMobileBill()}
+function renderPlanCards(items,selected,mode){
+ if(!items||!items.length)return '<div class="paymentIntro">No separate data add-on list was supplied for this operator. Switch to Recharge plans to view available catalogue entries.</div>';
+ return items.map(function(x){
+  var price=x[0],name=x[1],valid=x[2],benefit=x[3],note=x[4]||'';
+  var chunks=['Validity: '+valid,benefit];
+  var detail=chunks.map(function(v){return '<span class="planChip">'+escapeHTML(v)+'</span>'}).join('');
+  return '<button type="button" class="planCard '+(selected===price?'active':'')+'" onclick="selectPlan('+price+')"><div class="planTop"><span class="planName">'+escapeHTML(name)+'</span><span class="planPrice">₹'+Number(price).toLocaleString('en-IN')+'</span></div><div class="planMeta">'+detail+'</div>'+(note?'<div class="planNote">'+escapeHTML(note)+'</div>':'')+'</button>';
+ }).join('');
+}
+function selectPlan(price){billUiState.selected=Number(price);if(billUiState.type==='Mobile Recharge')renderMobileBill();else renderDthBill()}
+function renderDthBill(){
+ var providers=Object.keys(dthCatalog);
+ var descriptions={'Tata Play':'DTH television service','Airtel Digital TV':'Airtel television service','Dish TV':'Satellite TV service','d2h':'DTH television service','Sun Direct':'Satellite TV service'};
+ var html='<div class="paymentIntro">Choose your television provider, enter the subscriber ID and select a pack. Pack prices may exclude network capacity fee (NCF).</div><div class="paymentSectionTitle">Select TV provider <small>'+providers.length+' providers</small></div><div class="providerGrid">'+providers.map(function(p){var label=p==='Tata Play'?'TATA':p==='Airtel Digital TV'?'airtel':p==='Dish TV'?'DISH':p==='d2h'?'d2h':'SUN';var kind=p==='Airtel Digital TV'?'airtel':'';return '<button type="button" class="providerChoice '+(billUiState.provider===p?'active':'')+'" onclick="chooseDthProvider(\''+escapeAttr(p)+'\')">'+brandBadge(label,kind)+'<span class="providerWords"><strong>'+escapeHTML(p)+'</strong><small>'+descriptions[p]+'</small></span></button>'}).join('')+'</div>';
+ if(billUiState.provider){html+='<div class="paymentFields"><div class="field"><label>'+escapeHTML(billUiState.provider)+' subscriber ID</label><input id="billTarget" placeholder="Enter subscriber / customer ID"></div></div><div class="paymentSectionTitle">Available packs <small>'+dthCatalog[billUiState.provider].length+' packs listed</small></div><div class="planList">'+renderPlanCards(dthCatalog[billUiState.provider],billUiState.selected,'dth')+'</div><p class="planNote">Listed pack price excludes NCF unless stated. NCF reference: ₹153.40 for up to 200 SD channels; ₹188.80 for more than 200 channels. † indicates older or conflicting listing.</p>'+(billUiState.selected!==null?'<div class="paymentContinue"><button class="primary" onclick="paySelectedPlan(\'DTH Recharge\')">Continue · ₹'+billUiState.selected+'</button></div>':'')}
+ showModal('TV / DTH Recharge',html);
+}
+function chooseDthProvider(p){billUiState.provider=p;billUiState.selected=null;renderDthBill()}
+function paySelectedPlan(type){
+ var target=document.getElementById('billTarget');var number=(target&&target.value||'').trim();
+ if(!number){toast(type==='Mobile Recharge'?'Enter the mobile number.':'Enter the DTH subscriber ID.');return}
+ if(type==='Mobile Recharge'&&!/^\d{10}$/.test(number)){toast('Enter a valid 10-digit mobile number.');return}
+ var amount=Number(billUiState.selected);var provider=billUiState.provider;var tab=billUiState.tab;
+ processBillPayment(type,provider+' · '+number,amount,(type==='Mobile Recharge'?tab+' recharge plan':'DTH pack'));
+}
+function payBill(type){
+ var u=currentUser();
+ var target=document.getElementById('billTarget').value.trim();
+ var amount=Number(document.getElementById('billAmount').value);
+ if(type!=='Mobile Recharge'&&document.getElementById('utilityProvider'))target=document.getElementById('utilityProvider').value+' · '+target;
+ if(!target||!amount||amount<=0){toast('Enter the bill reference and a valid amount.');return}
+ if(amount>u.bankBalance){toast('Insufficient bank balance.');return}
+ processBillPayment(type,target,amount,type);
+}
+function processBillPayment(type,target,amount,note){
+ var u=currentUser();
+ if(amount>u.bankBalance){toast('Insufficient bank balance.');return}
+ showProcessing();
+ setTimeout(function(){
+  var fail=Math.random()<0.15;
+  if(fail){closeModal();showPaymentResult(false,{amount:amount,to:target,note:note||type,message:'Bill payment failed. No money was deducted.'});return}
+  u.bankBalance-=amount;
+  var tx={id:uid('TX'),type:'bill',title:type,amount:amount,to:target,note:note||type,status:'Success',date:new Date().toLocaleString()};
+  u.transactions.push(tx);save();closeModal();renderAll();
+  showPaymentResult(true,{amount:amount,to:target,note:note||type,txn:tx.id,receiver:type});
+ },1200+Math.random()*3300);
+}
+
+/* INVESTMENTS */
+function portfolioValue(u){
+ var total=0;
+ for(var i=0;i<marketAssets.length;i++){
+  var a=marketAssets[i];
+  var h=u.investments[a.symbol];
+  var m=u.market[a.symbol];
+  if(h)total+=h.units*m.price;
+ }
+ return total;
+}
+
+function totalInvested(u){
+ var total=0;
+ for(var i=0;i<marketAssets.length;i++){
+  total+=u.investments[marketAssets[i].symbol].invested;
+ }
+ return total;
+}
+
+function realizedPL(u){
+ var total=0;
+ for(var i=0;i<marketAssets.length;i++){
+  total+=u.investments[marketAssets[i].symbol].realizedPL;
+ }
+ return total;
+}
+
+function unrealizedPL(u){
+ var total=0;
+ for(var i=0;i<marketAssets.length;i++){
+  var a=marketAssets[i];
+  var h=u.investments[a.symbol];
+  var m=u.market[a.symbol];
+  total+=(h.units*m.price)-(h.units*h.avgPrice);
+ }
+ return total;
+}
+
+function updateMarkets(){
+ var u=currentUser();if(!u)return;
+
+ var now=Date.now();
+
+ for(var i=0;i<marketAssets.length;i++){
+  var a=marketAssets[i];
+  var m=u.market[a.symbol];
+
+  if(now-m.updated<3000)continue;
+
+  var old=m.price;
+  var direction=Math.random()*100<a.up?1:-1;
+  var pct=(0.15+Math.random()*(a.vol-0.15))*direction;
+
+  m.price=Math.max(a.base*0.15,m.price*(1+pct/100));
+  m.lastChange=((m.price-old)/old)*100;
+  m.updated=now;
+  m.history.push(m.price);
+
+  if(m.history.length>60)m.history.shift();
+ }
+
+ var net=realizedPL(u)+unrealizedPL(u);
+ u.portfolioHistory.push(net);
+ if(u.portfolioHistory.length>60)u.portfolioHistory.shift();
+
+ save();
+}
+
+function refreshMarket(){
+ updateMarkets();
+ renderInvestments();
+ toast("Market updated.");
+}
+
+function renderInvestments(){
+ var u=currentUser();if(!u)return;
+
+ updateMarkets();
+
+ var value=portfolioValue(u);
+ var invested=totalInvested(u);
+ var un=unrealizedPL(u);
+ var real=realizedPL(u);
+ var net=real+un;
+
+ document.getElementById("invCash").textContent=money(u.bankBalance);
+ document.getElementById("invValue").textContent=money(value);
+ document.getElementById("invInvested").textContent=money(invested);
+ document.getElementById("invUnrealized").textContent=money(un);
+ document.getElementById("invRealized").textContent=money(real);
+ document.getElementById("invNet").textContent=money(net);
+
+ drawChart();
+
+ var box=document.getElementById("assets");
+ box.innerHTML="";
+
+ for(var i=0;i<marketAssets.length;i++){
+  var a=marketAssets[i];
+  var h=u.investments[a.symbol];
+  var m=u.market[a.symbol];
+  var current=h.units*m.price;
+  var pl=current-(h.units*h.avgPrice);
+
+  box.innerHTML+=
+  '<div class="asset">'+
+   '<div class="assetTop">'+
+    '<div><strong>'+a.symbol+'</strong><div class="small">'+a.name+'</div></div>'+
+    '<div class="center"><div class="assetPrice">'+money(m.price)+'</div>'+
+    '<div class="'+(m.lastChange>=0?"green":"red")+'">'+(m.lastChange>=0?"+":"")+m.lastChange.toFixed(2)+'%</div></div>'+
+   '</div>'+
+   '<div class="grid" style="margin-top:12px">'+
+    '<div><span class="small">Units</span><br><b>'+h.units.toFixed(4)+'</b></div>'+
+    '<div><span class="small">Current Value</span><br><b>'+money(current)+'</b></div>'+
+    '<div><span class="small">Avg Price</span><br><b>'+money(h.avgPrice)+'</b></div>'+
+    '<div><span class="small">P/L</span><br><b class="'+(pl>=0?"green":"red")+'">'+(pl>=0?"+":"")+money(pl)+'</b></div>'+
+   '</div>'+
+   '<div class="assetButtons">'+
+    '<button onclick="buyAsset(\''+a.symbol+'\')">Buy</button>'+
+    '<button onclick="sellAsset(\''+a.symbol+'\')">Sell</button>'+
+    '<button onclick="realizeAsset(\''+a.symbol+'\')">Realize & Deposit</button>'+
+   '</div>'+
+   '<p class="small">Simulator setting: '+a.up+'% programmed up / '+(100-a.up)+'% programmed down.</p>'+
+  '</div>';
+ }
+}
+
+function buyAsset(symbol){
+ var u=currentUser();
+ var a=getAsset(symbol);
+ var m=u.market[symbol];
+
+ showModal("Buy "+a.symbol,
+ '<p class="small">Current price: '+money(m.price)+'</p>'+
+ '<div class="field"><label>Amount to invest</label><input id="buyAmount" type="number" placeholder="₹ Amount"></div>'+
+ '<button class="primary" onclick="executeBuy(\''+symbol+'\')">Buy</button>'
+ );
+}
+
+function executeBuy(symbol){
+ var u=currentUser();
+ var amount=Number(document.getElementById("buyAmount").value);
+ var m=u.market[symbol];
+
+ if(!amount||amount<=0){toast("Enter a valid amount.");return}
+ if(amount>u.bankBalance){toast("Insufficient bank balance.");return}
+
+ var units=amount/m.price;
+ var h=u.investments[symbol];
+
+ var oldCost=h.units*h.avgPrice;
+ h.units+=units;
+ h.invested+=amount;
+ h.avgPrice=h.units>0?(oldCost+amount)/h.units:0;
+
+ u.bankBalance-=amount;
+
+ u.transactions.push({
+  id:uid("TX"),type:"investment",
+  title:"Bought "+symbol,
+  amount:amount,status:"Success",
+  date:new Date().toLocaleString()
+ });
+
+ save();closeModal();renderAll();toast("Investment purchased.");
+}
+
+function sellAsset(symbol){
+ var u=currentUser();
+ var h=u.investments[symbol];
+ if(!h.units){toast("You do not own this asset.");return}
+
+ showModal("Sell "+symbol,
+ '<p class="small">Current price: '+money(u.market[symbol].price)+'</p>'+
+ '<p>Available units: <b>'+h.units.toFixed(4)+'</b></p>'+
+ '<div class="field"><label>Units to sell</label><input id="sellUnits" type="number" step="0.0001" max="'+h.units+'" placeholder="Units"></div>'+
+ '<button class="primary" onclick="executeSell(\''+symbol+'\')">Sell</button>'
+ );
+}
+
+function executeSell(symbol){
+ var u=currentUser();
+ var h=u.investments[symbol];
+ var units=Number(document.getElementById("sellUnits").value);
+ var price=u.market[symbol].price;
+
+ if(!units||units<=0){toast("Enter valid units.");return}
+ if(units>h.units){toast("You cannot sell more than you own.");return}
+
+ var costBasis=units*h.avgPrice;
+ var proceeds=units*price;
+ var pl=proceeds-costBasis;
+
+ h.units-=units;
+ h.realizedPL+=pl;
+
+ if(h.units<0.0000001){
+  h.units=0;
+  h.avgPrice=0;
+  h.invested=0;
+ }else{
+  h.invested=h.units*h.avgPrice;
+ }
+
+ /* THIS IS THE IMPORTANT ACCOUNTING:
+    sale proceeds actually return to bank balance.
+    If price is below cost, less money comes back = loss. */
+ u.bankBalance+=proceeds;
+
+ u.transactions.push({
+  id:uid("TX"),type:"investment",
+  title:"Sold "+symbol,
+  amount:proceeds,
+  note:"Realized P/L: "+(pl>=0?"+":"")+money(pl),
+  status:"Success",
+  date:new Date().toLocaleString()
+ });
+
+ save();closeModal();renderAll();
+
+ toast(
+  pl>=0?
+  "Profit realized and "+money(proceeds)+" deposited to bank.":
+  "Loss realized. "+money(proceeds)+" returned to bank."
+ );
+}
+
+function realizeAsset(symbol){
+ var u=currentUser();
+ var h=u.investments[symbol];
+ if(!h.units){toast("No units to realize.");return}
+
+ var pl=h.units*(u.market[symbol].price-h.avgPrice);
+
+ if(!confirm(
+  "Realize the entire "+symbol+" holding?\n\n"+
+  "Current P/L: "+(pl>=0?"+":"")+money(pl)+
+  "\n\nSelling realizes the result and credits the sale proceeds to your bank balance."
+ ))return;
+
+ var units=h.units;
+ var price=u.market[symbol].price;
+ var proceeds=units*price;
+
+ h.realizedPL+=pl;
+ h.units=0;
+ h.avgPrice=0;
+ h.invested=0;
+ u.bankBalance+=proceeds;
+
+ u.transactions.push({
+  id:uid("TX"),
+  type:"investment",
+  title:"Realized "+symbol,
+  amount:proceeds,
+  note:"Realized P/L: "+(pl>=0?"+":"")+money(pl),
+  status:"Success",
+  date:new Date().toLocaleString()
+ });
+
+ save();renderAll();
+
+ toast(pl>=0?
+  "Profit realized. Sale proceeds added to bank balance.":
+  "Loss realized. Loss reflected in the lower sale proceeds."
+ );
+}
+
+function getAsset(symbol){
+ for(var i=0;i<marketAssets.length;i++){
+  if(marketAssets[i].symbol===symbol)return marketAssets[i];
+ }
+ return marketAssets[0];
+}
+
+function drawChart(){
+ var c=document.getElementById("portfolioChart");
+ if(!c)return;
+ var ctx=c.getContext("2d");
+ var u=currentUser();
+
+ ctx.clearRect(0,0,c.width,c.height);
+ ctx.fillStyle="#0a0b14";
+ ctx.fillRect(0,0,c.width,c.height);
+
+ var data=u.portfolioHistory;
+ if(!data.length)data=[0];
+
+ var min=Math.min.apply(null,data);
+ var max=Math.max.apply(null,data);
+ if(min===max){min-=1;max+=1}
+
+ ctx.strokeStyle="#33364d";
+ ctx.lineWidth=1;
+ ctx.beginPath();
+ ctx.moveTo(30,20);ctx.lineTo(30,195);ctx.lineTo(680,195);ctx.stroke();
+
+ ctx.strokeStyle=(data[data.length-1]>=0?"#39d98a":"#ff626d");
+ ctx.lineWidth=3;
+ ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=9;
+ ctx.beginPath();
+
+ for(var i=0;i<data.length;i++){
+  var x=30+(i/(Math.max(1,data.length-1)))*650;
+  var y=20+(max-data[i])/(max-min)*175;
+  if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+ }
+ ctx.stroke();
+
+ ctx.fillStyle="#aaa";
+ ctx.font="12px Arial";
+ ctx.fillText("P/L",5,20);
+ ctx.fillText(money(data[data.length-1]),40,215);
+}
+
+function showInvestmentInfo(){
+ showModal("Investment Accounting",
+ '<p><b>Unrealized profit/loss</b> changes with the simulated market price but does not change your bank balance.</p>'+
+ '<p><b>Sell / Realize & Deposit</b> sells your units. The actual sale proceeds are added to your bank balance.</p>'+
+ '<p>If you sell below your average purchase price, you receive less money than you invested. That is the simulated loss.</p>'+
+ '<p class="small">All companies and prices here are fictional and this is not financial advice.</p>'
+ );
+}
+
+/* PREMIUM */
+function activatePremium(){
+ var u=currentUser();
+ if(!u)return;
+ if(u.premium){toast("Premium is already active for this email account.");return}
+ var price=299;
+ if(Number(u.bankBalance)<price){toast("Insufficient simulator bank balance. You need ₹299.");return}
+ if(!confirm("Purchase Premium for ₹299 for "+u.email+"?\\n\\n₹299 will be deducted from this account's simulator balance. No real payment will be processed."))return;
+ u.bankBalance-=price;
+ u.premium=true;
+ u.settings.premiumColor=u.settings.premiumColor||"gold";
+ u.transactions.push({
+  id:uid("TX"),type:"debit",title:"Premium Membership",
+  amount:price,to:u.email,note:"₹299 simulator membership activation",
+  status:"Success",date:new Date().toLocaleString()
+ });
+ save();applyMembershipTheme();renderAll();
+ toast("Premium activated for "+u.email+". ₹299 deducted from simulator balance.");
+}
+
+function applyMembershipTheme(){
+ var u=currentUser();
+ var app=document.getElementById("app");
+ if(app){
+  app.classList.toggle("member-premium",!!(u&&u.premium));
+  app.setAttribute("data-premium-color",u&&u.premium?(u.settings.premiumColor||"gold"):"gold");
+ }
+}
+
+function changePremiumColor(value){
+ var u=currentUser();
+ var allowed=["gold","sapphire","emerald","violet","rose"];
+ if(!u||!u.premium||allowed.indexOf(value)<0)return;
+ u.settings.premiumColor=value;
+ save();applyMembershipTheme();
+ toast("Premium colour updated.");
+}
+
+function renderPremium(){
+ var u=currentUser();if(!u)return;
+ var b=document.getElementById("premiumBtn");
+ var controls=document.getElementById("premiumColorControls");
+ var ribbon=document.getElementById("premiumRibbon");
+ if(u.premium){
+  b.textContent="Premium Active";
+  b.disabled=true;
+  b.style.opacity=".85";
+  if(ribbon)ribbon.style.display="inline-flex";
+  if(controls)controls.style.display="block";
+  var picker=document.getElementById("premiumColorSelect");
+  if(picker)picker.value=u.settings.premiumColor||"gold";
+ }else{
+  b.textContent="Activate Premium · ₹299";
+  b.disabled=false;
+  b.style.opacity="1";
+  if(ribbon)ribbon.style.display="none";
+  if(controls)controls.style.display="none";
+ }
+}
+
+/* HISTORY */
+function renderHistory(){
+ var u=currentUser();if(!u)return;
+ var box=document.getElementById("historyList");
+ var search=(document.getElementById("historySearch").value||"").toLowerCase();
+ var filter=document.getElementById("historyFilter").value;
+
+ var arr=u.transactions.slice().reverse();
+ var out="";
+
+ for(var i=0;i<arr.length;i++){
+  var t=arr[i];
+  var hay=(t.title+" "+t.to+" "+t.note+" "+t.id).toLowerCase();
+
+  if(search && hay.indexOf(search)<0)continue;
+  if(filter==="credit"&&t.type!=="credit")continue;
+  if(filter==="debit"&&t.type!=="debit")continue;
+  if(filter==="bill"&&t.type!=="bill")continue;
+  if(filter==="investment"&&t.type!=="investment")continue;
+
+  out+=txHTML(t)+
+   '<button class="secondary" style="margin:0 0 7px" onclick="transactionDetails(\''+escapeAttr(t.id)+'\')">View Details</button>';
+ }
+
+ box.innerHTML=out||'<p class="small center">No matching transactions.</p>';
+}
+
+function transactionDetails(id){
+ var u=currentUser();
+ for(var i=0;i<u.transactions.length;i++){
+  var t=u.transactions[i];
+  if(t.id===id){
+   showModal("Transaction Details",
+    '<div class="card">'+
+    '<div class="listItem"><span>Title</span><b>'+escapeHTML(t.title)+'</b></div>'+
+    '<div class="listItem"><span>Amount</span><b>'+money(t.amount)+'</b></div>'+
+    '<div class="listItem"><span>Status</span><b>'+escapeHTML(t.status)+'</b></div>'+
+    '<div class="listItem"><span>Transaction ID</span><b>'+escapeHTML(t.id)+'</b></div>'+
+    '<div class="listItem"><span>Date</span><b>'+escapeHTML(t.date)+'</b></div>'+
+    '<div class="listItem"><span>To / From</span><b>'+escapeHTML(t.to||t.from||"—")+'</b></div>'+
+    '<div class="listItem"><span>Note</span><b>'+escapeHTML(t.note||"—")+'</b></div>'+
+    '</div>'
+   );
+   return;
+  }
+ }
+}
+
+function exportStatement(){
+ var u=currentUser();
+ var text="MY BANK SIMULATOR STATEMENT\n\n";
+ text+="Name: "+u.name+"\n";
+ text+="Account: "+u.accountNumber+"\n";
+ text+="UPI: "+u.upi+"\n\n";
+
+ for(var i=0;i<u.transactions.length;i++){
+  var t=u.transactions[i];
+  text+=t.date+" | "+t.title+" | "+money(t.amount)+" | "+t.status+" | "+t.id+"\n";
+ }
+
+ var blob=new Blob([text],{type:"text/plain"});
+ var url=URL.createObjectURL(blob);
+ var a=document.createElement("a");
+ a.href=url;
+ a.download="my-bank-statement.txt";
+ document.body.appendChild(a);
+ a.click();
+ document.body.removeChild(a);
+ setTimeout(function(){URL.revokeObjectURL(url)},1000);
+}
+
+/* PROFILE */
+function renderProfile(){
+ var u=currentUser();if(!u)return;
+
+ document.getElementById("profileAvatar").textContent=u.name.charAt(0).toUpperCase();
+ document.getElementById("profileName").textContent=u.name;
+ document.getElementById("profileEmail").textContent=u.email;
+ document.getElementById("profileBank").textContent=u.bank;
+ document.getElementById("profileAccount").textContent=u.accountNumber;
+ document.getElementById("profileUpi").textContent=u.upi;
+ document.getElementById("profileCredit").textContent=u.creditScore;
+
+ document.getElementById("themeSelect").value=u.settings.theme;
+ document.getElementById("textSelect").value=u.settings.textSize;
+}
+
+/* CARDS */
+function showCards(){
+ var u=currentUser();
+
+ if(!u.cards.length){
+  u.cards.push({
+   number:"4567 82"+Math.floor(10000000+Math.random()*89999999),
+   expiry:"12/30",
+   cvv:"***",
+   frozen:false
+  });
+  save();
+ }
+
+ var c=u.cards[0];
+
+ showModal("My Card",
+ '<div class="card balanceCard" style="min-height:210px">'+
+ '<div style="display:flex;justify-content:space-between"><b>MY BANK</b><b>VIRTUAL</b></div>'+
+ '<div style="font-size:21px;letter-spacing:2px;margin-top:65px">'+escapeHTML(c.number)+'</div>'+
+ '<div style="display:flex;justify-content:space-between;margin-top:18px"><span>VALID '+c.expiry+'</span><span>'+u.name.toUpperCase()+'</span></div>'+
+ '</div>'+
+ '<p class="small">This is a simulated card and cannot make real payments.</p>'+
+ '<button class="secondary" onclick="toggleCard()"> '+(c.frozen?"Unfreeze":"Freeze")+' Card</button>'+
+ '<button class="secondary" onclick="changeAtmPin()">Change ATM PIN</button>'
+ );
+}
+
+function toggleCard(){
+ var u=currentUser();
+ u.cards[0].frozen=!u.cards[0].frozen;
+ save();
+ closeModal();
+ toast(u.cards[0].frozen?"Card frozen in simulator.":"Card unfrozen.");
+}
+
+function changeAtmPin(){
+ var p=prompt("Enter a new 4-digit ATM PIN:");
+ if(p===null)return;
+ if(!/^[0-9]{4}$/.test(p)){toast("PIN must contain 4 digits.");return}
+ toast("ATM PIN changed in simulator.");
+}
+
+/* SETTINGS */
+function changeTheme(v){
+ var u=currentUser();if(!u)return;
+ u.settings.theme=v;save();applySettings();
+}
+
+function changeTextSize(v){
+ var u=currentUser();if(!u)return;
+ u.settings.textSize=v;save();applySettings();
+}
+
+function applySettings(){
+ var u=currentUser();
+ if(!u)return;
+
+ document.body.classList.remove("light");
+ document.body.classList.remove("largeText");
+
+ var theme=u.settings.theme;
+ if(theme==="light")document.body.classList.add("light");
+ if(theme==="system" && window.matchMedia && window.matchMedia("(prefers-color-scheme:light)").matches)
+  document.body.classList.add("light");
+
+ if(u.settings.textSize==="large")document.body.classList.add("largeText");
+}
+
+function changeUpiPin(){
+ var u=currentUser();
+ var old=prompt("Current UPI PIN:");
+ if(old===null)return;
+ if(old!==u.settings.upiPin){toast("Incorrect PIN.");return}
+
+ var n=prompt("New 4-digit UPI PIN:");
+ if(n===null)return;
+ if(!/^[0-9]{4}$/.test(n)){toast("PIN must contain exactly 4 digits.");return}
+
+ u.settings.upiPin=n;
+ save();
+ toast("UPI PIN changed.");
+}
+
+/* NOTIFICATIONS */
+function renderNotificationBadge(){
+ var u=currentUser(),dot=document.getElementById("notificationDot");
+ if(!dot)return;
+ var unread=!!(u&&u.notifications&&u.notifications.some(function(n){return n.read!==true;}));
+ dot.classList.toggle("show",unread);
+}
+function showNotifications(){
+ var u=currentUser();
+ if(!u)return;
+ var html="";
+ if(!u.notifications.length){html='<p class="small center">No notifications.</p>';}
+ else{
+  for(var i=u.notifications.length-1;i>=0;i--){
+   u.notifications[i].read=true;
+   html+='<div class="listItem"><div><strong>'+escapeHTML(u.notifications[i].text)+'</strong><div class="small">'+escapeHTML(u.notifications[i].date)+'</div></div></div>';
+  }
+ }
+ save();
+ html+='<button class="secondary" onclick="clearNotifications()">Clear Notifications</button>';
+ showModal("Notifications",html);
+}
+
+function clearNotifications(){
+ var u=currentUser();
+ u.notifications=[];
+ save();closeModal();toast("Notifications cleared.");
+}
+
+/* MORE */
+function showMore(){
+ showModal("More",
+ '<button class="secondary" onclick="showPage(\'premium\');closeModal()">Premium View</button>'+
+ '<button class="secondary" onclick="showPage(\'history\');closeModal()">Transaction History</button>'+
+ '<button class="secondary" onclick="showHelp()">Help, Features & Developer</button>'+
+ '<button class="secondary" onclick="showBankDetails()">Bank Details</button>'
+ );
+}
+
+function showBankDetails(){
+ var u=currentUser();
+ showModal("Bank Details",
+ '<div class="card">'+
+ '<div class="listItem"><span>Bank</span><b>'+escapeHTML(u.bank)+'</b></div>'+
+ '<div class="listItem"><span>Account Number</span><b>'+u.accountNumber+'</b></div>'+
+ '<div class="listItem"><span>UPI ID</span><b>'+u.upi+'</b></div>'+
+ '<div class="listItem"><span>Virtual Payment ID</span><b>'+u.virtualPaymentId+'</b></div>'+
+ '</div>'+
+ '<p class="small">These details belong only to this local simulator.</p>'
+ );
+}
+
+/* HELP */
+function showHelp(){
+ showModal("Help, App Guide & Developer",
+ '<div class="paymentIntro"><b>Bank Simulator</b> is a learning app that demonstrates everyday banking, payments, savings and investing through fictional balances. It is not connected to a real bank or payment network.</div>'+ 
+ '<h3>Getting started</h3><p>Register with your name, a unique email address, an account number and a password. Choose a bank, then log in with the same email, account number and password. Your simulator profile is saved in this browser.</p>'+ 
+ '<h3>Home dashboard</h3><p>View your bank balance, wallet balance, investment value and net worth. Quick Actions take you to Send, Add Money, Request, Scan & Pay, Bills, Investments, Premium and Cards. Recent Activity shows your latest transactions.</p>'+ 
+ '<h3>Send and receive money</h3><p>Use the UPI page to send money to a simulator user by entering their registered Gmail address, UPI ID or account number. Review the receiver and amount before confirming. If the receiver has an account in this same browser’s simulator data, their balance is credited and they receive a notification. You can switch accounts by logging out and signing in with the other account. Each account needs its own unique email; the app does not support registering two accounts with the same Gmail address. This is only simulated money.</p>'+ 
+ '<h3>Add Money, Request and Scan & Pay</h3><p>Explore the Add Money and Request tools to practise wallet and payment flows. Scan & Pay uses a simulator QR, not a real merchant payment QR.</p>'+ 
+ '<h3>Mobile recharge</h3><p>Open Payments → Mobile. Select Jio, Airtel, Vi or BSNL, enter the 10-digit mobile number, choose Data add-ons or Recharge plans, then select a pack. Validity, data, calling, SMS and OTT details are shown where available. Some catalogue entries are historical or need operator verification.</p>'+ 
+ '<h3>TV / DTH recharge</h3><p>Open Payments → DTH. Choose Tata Play, Airtel Digital TV, Dish TV, d2h or Sun Direct, enter the subscriber ID and select a listed pack. Pack prices may not include NCF or other provider charges.</p>'+ 
+ '<h3>Other bill payments</h3><p>Choose Electricity, Water, Gas, Broadband, Education Fee, FASTag, Insurance or Other. Select the provider, enter the consumer/customer/policy reference and enter the bill amount. The payment is recorded only in the simulator.</p>'+ 
+ '<h3>Investments</h3><p>Explore fictional market assets, refresh simulated prices and view portfolio statistics. Unrealized profit/loss changes with market prices. Selling an asset records the simulated sale proceeds in your bank balance. These are not real shares or investment advice.</p>'+ 
+ '<h3>Cards, profile and history</h3><p>View your virtual simulator card, freeze or unfreeze it, review your profile and bank details, and search or filter transaction history. Account details and cards are fictional.</p>'+ 
+ '<h3>Premium membership</h3><p>Premium can be activated inside the app for demonstration. After activation, the app switches to a richer gold-and-navy member theme. The premium price and activation are simulated; no real payment is taken.</p>'+ 
+ '<h3>Developer</h3><p><b>Developer:</b> Bhargav Mahato<br><b>App:</b> Bank Simulator<br><b>Purpose:</b> Educational demonstration of digital banking and money management concepts.</p>'+ 
+ '<h3>Privacy and safety</h3><p>This version stores simulator data in the browser on this device. Clearing browser data may remove accounts and transactions. Use fictional demo details only. Never enter your real bank password, UPI PIN, card PIN or OTP.</p>'+ 
+ '<h3>Need help?</h3><p>If a button does not respond, refresh the page and sign in again. Check that required fields are filled in and that the selected plan/provider is correct. Recharge and bill catalogues are examples, not live provider availability.</p>'
+ );
+}
+
+/* CLEAR */
+function clearAllData(){
+ if(!confirm("Delete all accounts and simulator data from this browser?"))return;
+ try{localStorage.removeItem(KEY)}catch(e){}
+ state={users:[],session:null};
+ location.reload();
+}
+
+/* MODAL */
+function showModal(title,content){
+ document.getElementById("modalTitle").textContent=title;
+ document.getElementById("modalContent").innerHTML=content;
+ document.getElementById("modal").classList.add("show");
+}
+function closeModal(){
+ document.getElementById("modal").classList.remove("show");
+}
+function toast(text){
+ var t=document.getElementById("toast");
+ t.textContent=text;
+ t.classList.add("show");
+ clearTimeout(window.toastTimer);
+ window.toastTimer=setTimeout(function(){t.classList.remove("show")},2600);
+}
+
+/* COPY */
+function copyText(text){
+ try{
+  if(navigator.clipboard && navigator.clipboard.writeText){
+   navigator.clipboard.writeText(text).then(function(){toast("Copied.")}).catch(function(){fallbackCopy(text)});
+  }else fallbackCopy(text);
+ }catch(e){fallbackCopy(text)}
+}
+function fallbackCopy(text){
+ var x=document.createElement("textarea");
+ x.value=text;
+ document.body.appendChild(x);
+ x.select();
+ try{document.execCommand("copy");toast("Copied.")}catch(e){toast("Copy is not available.")}
+ document.body.removeChild(x);
+}
+
+/* SOUND */
+function playSound(success){
+ try{
+  var AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)return;
+  var ac=new AC();
+  var osc=ac.createOscillator();
+  var gain=ac.createGain();
+
+  osc.connect(gain);
+  gain.connect(ac.destination);
+
+  osc.frequency.value=success?720:180;
+  gain.gain.setValueAtTime(.001,ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(.15,ac.currentTime+.03);
+  gain.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.35);
+
+  osc.start();
+  osc.stop(ac.currentTime+.36);
+ }catch(e){}
+}
+
+/* SECURITY / HTML */
+function escapeHTML(s){
+ return String(s===undefined?"":s)
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+}
+
+function escapeAttr(s){
+ return String(s===undefined?"":s)
+  .replace(/\\/g,"\\\\")
+  .replace(/'/g,"\\'")
+  .replace(/\n/g," ");
+}
+
+/* LOAN SIMULATOR — independent from the existing banking features */
+var loanCatalog=[
+ {type:"Home",name:"Home Loan",icon:"🏡",min:50000,max:5000000,rate:8.5,tenure:2400,desc:"Build or renovate your dream home"},
+ {type:"Car",name:"Car Loan",icon:"🚘",min:50000,max:3000000,rate:9,tenure:1800,desc:"Bring home your next vehicle"},
+ {type:"Gold",name:"Gold Loan",icon:"💍",min:10000,max:1000000,rate:10,tenure:720,desc:"A flexible gold-backed demo offer"},
+ {type:"Personal",name:"Personal Loan",icon:"💼",min:5000,max:500000,rate:12,tenure:720,desc:"For your personal plans"},
+ {type:"Education",name:"Education Loan",icon:"🎓",min:10000,max:2000000,rate:7.5,tenure:2400,desc:"Support studies and learning"},
+ {type:"Business",name:"Business Loan",icon:"🏢",min:25000,max:2500000,rate:11,tenure:1800,desc:"Give a new idea room to grow"},
+ {type:"Travel",name:"Travel Loan",icon:"✈️",min:5000,max:300000,rate:13,tenure:365,desc:"Plan a memorable journey"},
+ {type:"Emergency",name:"Emergency Loan",icon:"🛟",min:3000,max:150000,rate:14,tenure:180,desc:"A small short-term demo offer"}
+];
+var loanFilter="All";
+function loanToday(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function loanAddDays(iso,n){var d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function loanDateLabel(iso){if(!iso)return "—";return new Date(iso+"T12:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}
+function loanDaysBetween(a,b){return Math.max(0,Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/86400000))}
+function loanDaily(principal,rate,days){return (principal+(principal*rate/100*days/365))/days}
+function filterLoanOffers(type,button){loanFilter=type;var bs=document.querySelectorAll("#loanFilters button");for(var i=0;i<bs.length;i++)bs[i].classList.remove("active");if(button)button.classList.add("active");renderLoanOffers()}
+function renderLoanOffers(){var box=document.getElementById("loanOfferList");if(!box)return;var html="";for(var i=0;i<loanCatalog.length;i++){var o=loanCatalog[i];if(loanFilter!=="All"&&o.type!==loanFilter)continue;var sample=Math.max(o.min,Math.min(o.max,Math.floor(loanDaily(o.min,o.rate,Math.min(o.tenure,365))<=1000?o.min:o.min)));html+='<div class="loanOffer"><div class="loanOfferIcon">'+o.icon+'</div><div><h4>'+o.name+'</h4><div class="loanRange">'+money(o.min)+' – '+money(o.max)+'</div><div class="loanMeta">'+o.rate+'% p.a. • Up to '+o.tenure+' days<br>Daily installment never above ₹1,000</div></div><button class="loanApplyMini" onclick="openLoanApply('+i+')">View →</button></div>';}box.innerHTML=html||'<div class="loanEmpty">No offers in this category.</div>'}
+function openLoanApply(index){var o=loanCatalog[index];var minDays=Math.ceil(o.min/(1000-(o.min*o.rate/100/365)));if(!isFinite(minDays)||minDays<1)minDays=1;var defaultDays=Math.max(30,Math.ceil(o.min/(1000-o.min*o.rate/100/365)));defaultDays=Math.min(o.tenure,defaultDays);var maxByCap=Math.floor(1000*o.tenure/(1+o.rate/100*o.tenure/365));var max=Math.min(o.max,Math.max(o.min,maxByCap));var html='<div class="loanOffer" style="margin-bottom:12px"><div class="loanOfferIcon">'+o.icon+'</div><div><h4>'+o.name+'</h4><div class="loanMeta">'+o.desc+'<br>'+o.rate+'% annual demo interest</div></div></div><div class="loanField"><label>Loan amount (₹)</label><input id="applyLoanAmount" type="number" min="'+o.min+'" max="'+max+'" step="1000" value="'+Math.min(Math.max(o.min,50000),max)+'" oninput="updateLoanQuote('+index+')"></div><div class="loanField"><label>Repayment duration (days)</label><input id="applyLoanDays" type="number" min="1" max="'+o.tenure+'" value="'+defaultDays+'" oninput="updateLoanQuote('+index+')"></div><div id="loanQuote" class="loanLendPreview"></div><p class="loanDisclaimer">The daily installment must be ₹1,000 or less. This is a fictional simulator offer, not a real loan.</p><button class="loanGoldBtn full" onclick="createDemoLoan('+index+')">Apply for Demo Loan →</button>';
+ showModal(o.name+" — Details",html);updateLoanQuote(index)}
+function updateLoanQuote(index){var o=loanCatalog[index],amountEl=document.getElementById("applyLoanAmount"),daysEl=document.getElementById("applyLoanDays"),a=Number(amountEl?amountEl.value:0),d=Number(daysEl?daysEl.value:0),q=document.getElementById("loanQuote");if(!q)return;var daily=d>0?loanDaily(a,o.rate,d):0;var total=a+a*o.rate/100*d/365;q.innerHTML='<span>Estimated daily installment<br><b style="color:'+(daily<=1000?'#53d99a':'#ff8585')+'">'+money(daily)+'</b></span><span style="text-align:right">Total repayment<br><b>'+money(total)+'</b></span>';if(daily>1000)q.innerHTML+='<div style="width:100%;color:#ff8585;font-size:10px;margin-top:6px">Choose a longer duration or lower amount to keep daily installment within ₹1,000.</div>'}
+function createDemoLoan(index){var u=currentUser(),o=loanCatalog[index],amount=Number(document.getElementById("applyLoanAmount").value),days=Number(document.getElementById("applyLoanDays").value),daily=loanDaily(amount,o.rate,days);if(!Number.isFinite(amount)||amount<o.min||amount>o.max){toast("Enter an amount within this offer range.");return}if(!Number.isInteger(days)||days<1||days>o.tenure){toast("Choose a valid repayment duration.");return}if(daily>1000){toast("Daily installment cannot exceed ₹1,000.");return}var loan={id:uid("LN"),name:o.name,type:o.type,principal:amount,rate:o.rate,days:days,total:amount+amount*o.rate/100*days/365,daily:daily,paid:0,nextDue:loanAddDays(loanToday(),1),created:loanToday(),status:"Active",lastReminder:""};u.demoLoans.push(loan);u.bankBalance+=amount;u.notifications.push({text:"Demo "+o.name+" approved for "+money(amount)+". Daily installment: "+money(daily)+".",date:new Date().toLocaleString()});u.transactions.push({id:uid("TX"),type:"credit",title:o.name+" (demo loan)",amount:amount,status:"Success",date:new Date().toLocaleString()});save();closeModal();renderLoan();renderHome();toast("Demo loan approved.")}
+function checkLoanReminders(){var u=currentUser();if(!u)return;var today=loanToday(),changed=false;for(var i=0;i<u.demoLoans.length;i++){var l=u.demoLoans[i];if(l.status==="Active"&&l.nextDue<=today&&l.lastReminder!==l.nextDue){var late=loanDaysBetween(l.nextDue,today),due=l.daily*(late>0?1.02:1);u.notifications.push({text:"Daily installment due for "+l.name+": "+money(due)+". "+(late?"Includes 2% late charge.":"Pay today to avoid a late charge."),date:new Date().toLocaleString()});l.lastReminder=l.nextDue;changed=true;}}if(changed)save()}
+function payDemoInstallment(id){var u=currentUser(),l=u.demoLoans.find(function(x){return x.id===id});if(!l||l.status!=="Active")return;var today=loanToday(),late=loanDaysBetween(l.nextDue,today),due=Math.min(l.total-l.paid,l.daily*(1+0.02*late));if(u.bankBalance<due){toast("Insufficient simulator balance to pay this installment.");return}u.bankBalance-=due;l.paid+=due;var isComplete=l.paid>=l.total-0.01;if(isComplete){l.status="Completed";l.paid=l.total}else{l.nextDue=loanAddDays(l.nextDue,1);l.lastReminder=""}u.transactions.push({id:uid("TX"),type:"debit",title:l.name+" daily installment",amount:due,status:"Success",date:new Date().toLocaleString()});u.notifications.push({text:"Installment paid: "+money(due)+" for "+l.name+(isComplete?". Loan completed.":"."),date:new Date().toLocaleString()});save();renderLoan();renderHome();toast(isComplete?"Loan completed.":"Daily installment paid.")}
+function renderActiveLoans(){var u=currentUser(),box=document.getElementById("activeLoanList");if(!u||!box)return;var active=u.demoLoans.filter(function(l){return l.status==="Active"});if(!active.length){box.innerHTML='<div class="loanEmpty">No active loans yet. Choose an offer above to get started.</div>';return}var html="";active.forEach(function(l){var late=loanDaysBetween(l.nextDue,loanToday()),due=Math.min(l.total-l.paid,l.daily*(1+0.02*late)),pct=Math.min(100,l.paid/l.total*100);html+='<div class="loanActiveCard"><div class="loanActiveTop"><b>'+escapeHTML(l.name)+'</b><span class="loanPill">ACTIVE</span></div><div class="loanDueRow"><span>Loan amount</span><strong>'+money(l.principal)+'</strong></div><div class="loanDueRow"><span>Paid so far</span><strong>'+money(l.paid)+'</strong></div><div class="loanProgress"><span style="width:'+pct+'%"></span></div><div class="loanDueRow"><span>Next installment • '+loanDateLabel(l.nextDue)+'</span><strong>'+money(due)+'</strong></div>'+(late?'<div class="loanDisclaimer" style="color:#ff9b9b">Includes a one-time 2% late charge.</div>':'')+'<div class="loanDueRow"><span>Daily installment</span><strong>'+money(l.daily)+'</strong></div><button class="loanPayBtn" onclick="payDemoInstallment(\''+l.id+'\')">Pay Daily Installment</button></div>'});box.innerHTML=html}
+var selectedLendReward=30;
+function setLendReward(n){selectedLendReward=n;document.getElementById("lend30").classList.toggle("active",n===30);document.getElementById("lend40").classList.toggle("active",n===40);updateLendPreview()}
+function updateLendPreview(){var el=document.getElementById("lendPreview");if(el)el.textContent=money(selectedLendReward*30)}
+function startLending(){var u=currentUser(),amount=Number(document.getElementById("lendAmount").value);if(!Number.isFinite(amount)||amount<1000||amount>u.bankBalance){toast("Enter a lending amount between ₹1,000 and your available balance.");return}if(!confirm("Lend "+money(amount)+" in the simulator and receive ₹"+selectedLendReward+" per day for 30 days?"))return;u.bankBalance-=amount;u.demoLendings.push({id:uid("LD"),amount:amount,dailyInterest:selectedLendReward,days:30,daysAccrued:0,lastAccrued:loanToday(),start:loanToday(),status:"Active",interestEarned:0});u.notifications.push({text:"Your demo lending of "+money(amount)+" has started. Daily interest reward: "+money(selectedLendReward)+".",date:new Date().toLocaleString()});u.transactions.push({id:uid("TX"),type:"debit",title:"Demo lending started",amount:amount,status:"Success",date:new Date().toLocaleString()});save();renderLoan();renderHome();toast("Your demo lending plan has started.")}
+function processLendingRewards(){var u=currentUser();if(!u)return;var today=loanToday(),changed=false;u.demoLendings.forEach(function(x){if(x.status!=="Active")return;var elapsed=loanDaysBetween(x.lastAccrued,today);if(elapsed<=0)return;var n=Math.min(elapsed,x.days-x.daysAccrued);if(n>0){var reward=n*x.dailyInterest;u.bankBalance+=reward;x.interestEarned+=reward;x.daysAccrued+=n;x.lastAccrued=loanAddDays(x.lastAccrued,n);u.notifications.push({text:"Daily lending interest credited: "+money(x.dailyInterest)+". Total earned: "+money(x.interestEarned)+".",date:new Date().toLocaleString()});changed=true}if(x.daysAccrued>=x.days){u.bankBalance+=x.amount;x.status="Completed";u.notifications.push({text:"Your demo lending matured. Principal "+money(x.amount)+" returned to your simulator balance.",date:new Date().toLocaleString()});changed=true}});if(changed)save()}
+function renderMyLending(){var u=currentUser(),box=document.getElementById("myLendingList");if(!u||!box)return;if(!u.demoLendings.length){box.innerHTML='<div class="loanEmpty">You have not lent any demo money yet.</div>';return}box.innerHTML=u.demoLendings.slice().reverse().map(function(x){return '<div class="loanActiveCard"><div class="loanActiveTop"><b>Demo lending • '+money(x.amount)+'</b><span class="loanPill">'+x.status+'</span></div><div class="loanDueRow"><span>Daily interest</span><strong>'+money(x.dailyInterest)+'</strong></div><div class="loanDueRow"><span>Interest earned</span><strong>'+money(x.interestEarned)+'</strong></div><div class="loanDueRow"><span>Days completed</span><strong>'+x.daysAccrued+' / '+x.days+'</strong></div><div class="loanProgress"><span style="width:'+(x.daysAccrued/x.days*100)+'%"></span></div></div>'}).join('')}
+function renderLoan(){var u=currentUser();if(!u)return;processLendingRewards();var active=u.demoLoans.filter(function(l){return l.status==="Active"});document.getElementById("loanActiveCount").textContent=active.length;document.getElementById("loanDailyTotal").textContent=money(active.reduce(function(a,l){return a+l.daily},0));document.getElementById("loanInterestEarned").textContent=money(u.demoLendings.reduce(function(a,x){return a+x.interestEarned},0));renderLoanOffers();renderActiveLoans();renderMyLending();updateLendPreview()}
+
+/* RENDER */
+function renderAll(){
+ var u=currentUser();
+ if(!u)return;
+
+ normalizeUser(u);
+ applyMembershipTheme();
+ renderHome();
+ renderUPI();
+ renderInvestments();
+ renderPremium();
+ renderHistory();
+ renderProfile();
+ renderLoan();
+ checkLoanReminders();
+ renderNotificationBadge();
+}
+
+
+/* DAILY HOUSEHOLD UTILITY BILL SIMULATOR — excludes mobile and TV recharge */
+var dailyUtilityCatalog=[
+ {key:"electricity",name:"Electricity Bill",icon:"⚡",amount:100},
+ {key:"water",name:"Water Bill",icon:"💧",amount:50},
+ {key:"gas",name:"Gas Bill",icon:"🔥",amount:50}
+];
+function renderDailyUtilityBills(){
+ var box=document.getElementById("dailyUtilityBillsList"),u=currentUser();if(!box||!u)return;
+ if(!u.dailyUtilityBills)u.dailyUtilityBills={lastReminder:"",paidToday:{}};
+ var today=loanToday();
+ box.innerHTML=dailyUtilityCatalog.map(function(b){var paid=u.dailyUtilityBills.paidToday[b.key]===today;return '<div class="loanDueRow" style="padding:10px 0;border-bottom:1px solid #8d8d8d30"><span>'+b.icon+' '+b.name+'<br><small>'+(paid?'Paid today':'Daily reminder due')+'</small></span><strong>'+money(b.amount)+'</strong><button class="loanPayBtn" style="width:auto;padding:8px 12px;margin:0 0 0 8px" '+(paid?'disabled':'')+' onclick="payDailyUtilityBill(\''+b.key+'\')">'+(paid?'Paid':'Pay')+'</button></div>'}).join("");
+}
+var dailyUtilityReminderTimer=null;
+function scheduleDailyUtilityBillReminders(){
+ if(dailyUtilityReminderTimer)clearTimeout(dailyUtilityReminderTimer);
+ // Give the user time to reach the dashboard; then show the reminders as a top-of-app notification.
+ dailyUtilityReminderTimer=setTimeout(checkDailyUtilityBillReminders,30000);
+}
+function checkDailyUtilityBillReminders(){
+ var u=currentUser();if(!u||document.getElementById("app").style.display==="none")return;
+ if(!u.dailyUtilityBills)u.dailyUtilityBills={lastReminder:"",paidToday:{}};
+ var today=loanToday();if(u.dailyUtilityBills.lastReminder===today)return;
+ var due=[];
+ dailyUtilityCatalog.forEach(function(b){if(u.dailyUtilityBills.paidToday[b.key]!==today){due.push(b);}});
+ u.dailyUtilityBills.lastReminder=today;
+ if(due.length){
+  var lines=due.map(function(b){return b.icon+" "+escapeHTML(b.name)+" · "+money(b.amount)}).join("　　");
+  // Persist the daily reminder as an unread notification as well as showing the banner.
+  u.notifications.push({text:"Daily bill reminder: "+due.map(function(b){return b.name+" ("+money(b.amount)+")";}).join(", ")+". These are simulated daily estimates.",date:new Date().toLocaleString(),read:false});
+  save();
+  var notice=document.getElementById("dailyTopNotice");
+  if(notice){
+   notice.innerHTML='<div class="noticeHead"><span>🔔 Daily bill reminder</span><button type="button" aria-label="Dismiss" onclick="dismissDailyTopNotice()">×</button></div><div class="noticeBody">'+lines+'<br>These are simulated daily estimates, not actual bills.</div><div class="noticeActions"><button type="button" onclick="dismissDailyTopNotice();showNotifications()">View notifications</button></div>';
+   notice.classList.add("show");
+   playDailyBillPopupSound();
+   clearTimeout(window.dailyNoticeHideTimer);
+   window.dailyNoticeHideTimer=setTimeout(dismissDailyTopNotice,10000);
+  }
+ }else{save();}
+}
+function dismissDailyTopNotice(){var n=document.getElementById("dailyTopNotice");if(n)n.classList.remove("show");}
+// A separate soft pop sound for the daily premium bill banner (not the app's button-click chime).
+function playDailyBillPopupSound(){
+ try{
+  var AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx)return;
+  var ctx=new AudioCtx();
+  var osc=ctx.createOscillator(),gain=ctx.createGain();
+  osc.type="sine";
+  osc.frequency.setValueAtTime(520,ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(880,ctx.currentTime+0.085);
+  osc.frequency.exponentialRampToValueAtTime(660,ctx.currentTime+0.19);
+  gain.gain.setValueAtTime(0.0001,ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.22,ctx.currentTime+0.018);
+  gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.24);
+  osc.connect(gain);gain.connect(ctx.destination);
+  osc.start();osc.stop(ctx.currentTime+0.25);
+  osc.onended=function(){ctx.close();};
+ }catch(e){}
+}
+
+function payDailyUtilityBill(key){
+ var u=currentUser(),b=dailyUtilityCatalog.find(function(x){return x.key===key});if(!u||!b)return;
+ if(!u.dailyUtilityBills)u.dailyUtilityBills={lastReminder:"",paidToday:{}};
+ var today=loanToday();if(u.dailyUtilityBills.paidToday[b.key]===today){toast("This demo bill is already paid today.");return}
+ if(u.bankBalance<b.amount){toast("Insufficient simulator balance.");return}
+ u.bankBalance-=b.amount;u.dailyUtilityBills.paidToday[b.key]=today;
+ u.transactions.push({id:uid("TX"),type:"debit",title:"Daily "+b.name+" (demo)",amount:b.amount,status:"Success",date:new Date().toLocaleString()});
+ u.notifications.push({text:"Daily "+b.name+" paid: "+money(b.amount)+".",date:new Date().toLocaleString()});
+ save();renderDailyUtilityBills();renderHome();toast(b.name+" paid in the simulator.");
+}
+
+/* Bank selection cards with locally-rendered brand marks */
+var bankOptions=[
+ ['State Bank of India','SBI','#2476bd'],['Punjab National Bank','PNB','#a32632'],['HDFC Bank','HDFC','#174c91'],['ICICI Bank','ICICI','#b56b26'],['Axis Bank','AXIS','#7a284f'],['Bank of Baroda','BOB','#e87525'],['Canara Bank','CAN','#087a50'],['Union Bank of India','UBI','#d54c37'],['Indian Bank','IB','#8d2436'],['Bank of India','BOI','#1c5c9b'],['Central Bank of India','CBI','#2874a6'],['IDBI Bank','IDBI','#b52d35'],['Kotak Mahindra Bank','KOTAK','#c32b32'],['IndusInd Bank','INDUS','#7b2d70'],['Yes Bank','YES','#277c77'],['Federal Bank','FED','#1b6090'],['AU Small Finance Bank','AU','#b21f36'],['IDFC FIRST Bank','IDFC','#b12d3a'],['UCO Bank','UCO','#346b9b'],['Bank of Maharashtra','BOM','#b63a35']
+];
+function bankLogoMarkup(bank){return '<span class="bankBrandMark" style="background:'+bank[2]+'"><span>'+escapeHTML(bank[1])+'</span></span>';}
+function renderBankPicker(){
+ var menu=document.getElementById('bankPickerMenu');if(!menu)return;
+ var selected=document.getElementById('regBank').value||'';
+ menu.innerHTML='<div class="bankSelectMenuHeading">BANK</div>'+bankOptions.map(function(b){return '<button type="button" class="bankSelectOption'+(b[0]===selected?' active':'')+'" role="option" aria-selected="'+(b[0]===selected?'true':'false')+'" onclick="chooseBank(\''+escapeAttr(b[0])+'\')">'+bankLogoMarkup(b)+'<strong>'+escapeHTML(b[0])+'</strong></button>'}).join('');
+ updateBankPickerDisplay(selected);
+}
+function updateBankPickerDisplay(name){
+ var bank=bankOptions.find(function(b){return b[0]===name});
+ var logo=document.getElementById('bankPickerSelectedLogo'),title=document.getElementById('bankPickerSelectedName');
+ if(logo){if(bank){logo.style.background=bank[2];logo.innerHTML='<span>'+escapeHTML(bank[1])+'</span>';logo.classList.remove('bankBrandMarkEmpty');}else{logo.innerHTML='';logo.classList.add('bankBrandMarkEmpty');}}
+ if(title)title.textContent=bank?bank[0]:'Select your bank';
+}
+function toggleBankPicker(){
+ var menu=document.getElementById('bankPickerMenu'),trigger=document.getElementById('bankPickerSelect');if(!menu||!trigger)return;
+ var open=!menu.classList.contains('open');menu.classList.toggle('open',open);trigger.setAttribute('aria-expanded',open?'true':'false');
+}
+function chooseBank(name){
+ document.getElementById('regBank').value=name;updateBankPickerDisplay(name);renderBankPicker();
+ var menu=document.getElementById('bankPickerMenu'),trigger=document.getElementById('bankPickerSelect');if(menu)menu.classList.remove('open');if(trigger)trigger.setAttribute('aria-expanded','false');
+}
+document.addEventListener('click',function(event){var wrap=document.getElementById('bankSelectWrap');if(wrap&&!wrap.contains(event.target)){var menu=document.getElementById('bankPickerMenu'),trigger=document.getElementById('bankPickerSelect');if(menu)menu.classList.remove('open');if(trigger)trigger.setAttribute('aria-expanded','false');}});
+var bankMenuScroll=document.getElementById('bankPickerMenu');if(bankMenuScroll){bankMenuScroll.addEventListener('wheel',function(e){e.stopPropagation();},{passive:true});bankMenuScroll.addEventListener('touchmove',function(e){e.stopPropagation();},{passive:true});}
+
+/* Refresh simulator loan reminders and daily lending rewards while the app is open. */
+setInterval(function(){if(currentUser()){checkLoanReminders();processLendingRewards();}},60000);
+
+/* START */
+try{
+ renderBankPicker();
+ boot();
+}catch(e){
+ hideSplash();
+ state={users:[],session:null};
+ showAuth();
+}
+
+/* Keep investment market moving while app is open */
+setInterval(function(){
+ try{
+  if(currentUser() && document.getElementById("investmentsPage").classList.contains("active")){
+   renderInvestments();
+  }
+ }catch(e){}
+},5000);
+
+
+
+/* Premium interface click chime. Existing app actions and calculations remain unchanged. */
+(function(){
+ var audioContext;
+ function playPremiumClick(){
+  try{
+   var AudioCtx=window.AudioContext||window.webkitAudioContext;
+   if(!AudioCtx)return;
+   audioContext=audioContext||new AudioCtx();
+   if(audioContext.state==='suspended')audioContext.resume();
+   var now=audioContext.currentTime;
+   var master=audioContext.createGain();
+   master.gain.setValueAtTime(0.0001,now);
+   master.gain.exponentialRampToValueAtTime(0.075,now+0.012);
+   master.gain.exponentialRampToValueAtTime(0.0001,now+0.42);
+   master.connect(audioContext.destination);
+   [880,1320].forEach(function(freq,i){
+    var osc=audioContext.createOscillator();
+    var gain=audioContext.createGain();
+    osc.type='sine';osc.frequency.setValueAtTime(freq,now+i*0.035);
+    gain.gain.setValueAtTime(0.0001,now);
+    gain.gain.exponentialRampToValueAtTime(i?0.32:0.55,now+0.014+i*0.035);
+    gain.gain.exponentialRampToValueAtTime(0.0001,now+0.34+i*0.035);
+    osc.connect(gain);gain.connect(master);
+    osc.start(now+i*0.035);osc.stop(now+0.38+i*0.035);
+   });
+  }catch(e){}
+ }
+ document.addEventListener('click',function(event){
+  var target=event.target&&event.target.closest?event.target.closest('button,[role="button"]'):null;
+  if(target&&!target.disabled)playPremiumClick();
+ },true);
+})();
+
+</script>
+</body>
+</html>
